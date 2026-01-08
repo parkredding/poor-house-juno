@@ -184,6 +184,27 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setFilterEnvRelease', data: release });
     }
 
+    // Amplitude envelope parameter methods
+    setAmpEnvAttack(attack) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvAttack', data: attack });
+    }
+
+    setAmpEnvDecay(decay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvDecay', data: decay });
+    }
+
+    setAmpEnvSustain(sustain) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvSustain', data: sustain });
+    }
+
+    setAmpEnvRelease(release) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvRelease', data: release });
+    }
+
     // Legacy methods (for compatibility)
     setFrequency(freq) {
         if (!this.initialized || !this.workletNode) return;

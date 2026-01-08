@@ -158,6 +158,31 @@ class App {
             if (this.audioEngine) this.audioEngine.setFilterEnvRelease(value);
         });
 
+        // Amplitude envelope controls
+        document.getElementById('amp-env-attack').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;  // Convert ms to seconds
+            document.getElementById('amp-env-attack-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setAmpEnvAttack(value);
+        });
+
+        document.getElementById('amp-env-decay').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;
+            document.getElementById('amp-env-decay-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setAmpEnvDecay(value);
+        });
+
+        document.getElementById('amp-env-sustain').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('amp-env-sustain-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setAmpEnvSustain(value);
+        });
+
+        document.getElementById('amp-env-release').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;
+            document.getElementById('amp-env-release-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setAmpEnvRelease(value);
+        });
+
         // MIDI device selection
         document.getElementById('midi-input').addEventListener('change', (e) => {
             this.selectMidiDevice(e.target.value);

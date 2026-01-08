@@ -119,6 +119,23 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setFilterEnvRelease(data);
                 break;
 
+            // Amplitude envelope parameters
+            case 'setAmpEnvAttack':
+                synthInstance.setAmpEnvAttack(data);
+                break;
+
+            case 'setAmpEnvDecay':
+                synthInstance.setAmpEnvDecay(data);
+                break;
+
+            case 'setAmpEnvSustain':
+                synthInstance.setAmpEnvSustain(data);
+                break;
+
+            case 'setAmpEnvRelease':
+                synthInstance.setAmpEnvRelease(data);
+                break;
+
             // Legacy
             case 'setFrequency':
                 synthInstance.setFrequency(data);

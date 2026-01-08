@@ -23,9 +23,11 @@ struct TestSynth {
     Dco dco;
     Filter filter;
     Envelope filterEnv;
+    Envelope ampEnv;
     DcoParams dcoParams;
     FilterParams filterParams;
     EnvelopeParams filterEnvParams;
+    EnvelopeParams ampEnvParams;
     bool noteOn;
     float lfoPhase;
     float lfoRate;
@@ -46,15 +48,19 @@ void audioCallback(float* left, float* right, int numSamples, void* userData) {
         synth->lfoPhase += synth->lfoRate / 48000.0f;
         if (synth->lfoPhase >= 1.0f) synth->lfoPhase -= 1.0f;
 
-        // Update filter envelope
-        float envValue = synth->filterEnv.process();
-        synth->filter.setEnvValue(envValue);
+        // Update envelopes
+        float filterEnvValue = synth->filterEnv.process();
+        float ampEnvValue = synth->ampEnv.process();
+        synth->filter.setEnvValue(filterEnvValue);
 
         // Generate DCO sample
-        float dcoOut = synth->noteOn ? synth->dco.process() : 0.0f;
+        float dcoOut = synth->dco.process();
 
         // Process through filter
-        float sample = synth->filter.process(dcoOut);
+        float filtered = synth->filter.process(dcoOut);
+
+        // Apply amplitude envelope
+        float sample = filtered * ampEnvValue;
 
         left[i] = sample;
         right[i] = sample;
@@ -77,11 +83,13 @@ void midiCallback(const uint8_t* data, int length, void* userData) {
         synth->dco.noteOn();
         synth->filter.setNoteFrequency(synth->currentFreq);
         synth->filterEnv.noteOn();
+        synth->ampEnv.noteOn();
         synth->noteOn = true;
         std::cout << "Note ON: " << (int)note << " (" << synth->currentFreq << " Hz), vel=" << (int)velocity << std::endl;
     } else if (status == MIDI_NOTE_OFF || (status == MIDI_NOTE_ON && velocity == 0)) {
         synth->dco.noteOff();
         synth->filterEnv.noteOff();
+        synth->ampEnv.noteOff();
         synth->noteOn = false;
         std::cout << "Note OFF: " << (int)note << std::endl;
     }
@@ -100,6 +108,7 @@ int main(int argc, char** argv) {
     g_synth.dco.setFrequency(440.0f);
     g_synth.filter.setSampleRate(48000.0f);
     g_synth.filterEnv.setSampleRate(48000.0f);
+    g_synth.ampEnv.setSampleRate(48000.0f);
     g_synth.noteOn = false;
     g_synth.lfoPhase = 0.0f;
     g_synth.lfoRate = 2.0f;
@@ -132,6 +141,13 @@ int main(int argc, char** argv) {
     g_synth.filterEnvParams.sustain = 0.7f;
     g_synth.filterEnvParams.release = 0.5f;
     g_synth.filterEnv.setParameters(g_synth.filterEnvParams);
+
+    // Setup amplitude envelope
+    g_synth.ampEnvParams.attack = 0.005f;   // Fast attack
+    g_synth.ampEnvParams.decay = 0.3f;
+    g_synth.ampEnvParams.sustain = 0.8f;
+    g_synth.ampEnvParams.release = 0.3f;
+    g_synth.ampEnv.setParameters(g_synth.ampEnvParams);
 
     // Initialize audio driver
     AudioDriver audio;

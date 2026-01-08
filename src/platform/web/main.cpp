@@ -26,6 +26,7 @@ public:
         dco_.setFrequency(440.0f);
         filter_.setSampleRate(sampleRate);
         filterEnv_.setSampleRate(sampleRate);
+        ampEnv_.setSampleRate(sampleRate);
 
         // Default DCO parameters - sawtooth wave
         dcoParams_.sawLevel = 0.5f;
@@ -48,12 +49,19 @@ public:
         filterParams_.drive = 1.0f;
         filter_.setParameters(filterParams_);
 
-        // Default envelope parameters
+        // Default filter envelope parameters
         filterEnvParams_.attack = 0.01f;
         filterEnvParams_.decay = 0.3f;
         filterEnvParams_.sustain = 0.7f;
         filterEnvParams_.release = 0.5f;
         filterEnv_.setParameters(filterEnvParams_);
+
+        // Default amplitude envelope parameters
+        ampEnvParams_.attack = 0.005f;   // Fast attack for plucky sounds
+        ampEnvParams_.decay = 0.3f;
+        ampEnvParams_.sustain = 0.8f;
+        ampEnvParams_.release = 0.3f;
+        ampEnv_.setParameters(ampEnvParams_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -69,15 +77,19 @@ public:
             lfoPhase_ += lfoRate_ / sampleRate_;
             if (lfoPhase_ >= 1.0f) lfoPhase_ -= 1.0f;
 
-            // Update filter envelope
-            float envValue = filterEnv_.process();
-            filter_.setEnvValue(envValue);
+            // Update envelopes
+            float filterEnvValue = filterEnv_.process();
+            float ampEnvValue = ampEnv_.process();
+            filter_.setEnvValue(filterEnvValue);
 
             // Generate DCO sample
-            float dcoOut = noteOn_ ? dco_.process() : 0.0f;
+            float dcoOut = dco_.process();
 
             // Process through filter
-            float sample = filter_.process(dcoOut);
+            float filtered = filter_.process(dcoOut);
+
+            // Apply amplitude envelope
+            float sample = filtered * ampEnvValue;
 
             left[i] = sample;
             right[i] = sample;
@@ -94,10 +106,12 @@ public:
             dco_.noteOn();
             filter_.setNoteFrequency(currentFreq_);
             filterEnv_.noteOn();
+            ampEnv_.noteOn();
             noteOn_ = true;
         } else if (statusByte == MIDI_NOTE_OFF || (statusByte == MIDI_NOTE_ON && data2 == 0)) {
             dco_.noteOff();
             filterEnv_.noteOff();
+            ampEnv_.noteOff();
             noteOn_ = false;
         }
     }
@@ -199,6 +213,27 @@ public:
         filterEnv_.setParameters(filterEnvParams_);
     }
 
+    // Parameter control - Amplitude Envelope
+    void setAmpEnvAttack(float attack) {
+        ampEnvParams_.attack = attack;
+        ampEnv_.setParameters(ampEnvParams_);
+    }
+
+    void setAmpEnvDecay(float decay) {
+        ampEnvParams_.decay = decay;
+        ampEnv_.setParameters(ampEnvParams_);
+    }
+
+    void setAmpEnvSustain(float sustain) {
+        ampEnvParams_.sustain = sustain;
+        ampEnv_.setParameters(ampEnvParams_);
+    }
+
+    void setAmpEnvRelease(float release) {
+        ampEnvParams_.release = release;
+        ampEnv_.setParameters(ampEnvParams_);
+    }
+
     // Legacy interface for compatibility
     void setFrequency(float freq) {
         dco_.setFrequency(freq);
@@ -218,10 +253,12 @@ private:
     Dco dco_;
     Filter filter_;
     Envelope filterEnv_;
+    Envelope ampEnv_;
 
     DcoParams dcoParams_;
     FilterParams filterParams_;
     EnvelopeParams filterEnvParams_;
+    EnvelopeParams ampEnvParams_;
 
     bool noteOn_;
     float currentFreq_;
@@ -262,6 +299,12 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setFilterEnvDecay", &WebSynth::setFilterEnvDecay)
         .function("setFilterEnvSustain", &WebSynth::setFilterEnvSustain)
         .function("setFilterEnvRelease", &WebSynth::setFilterEnvRelease)
+
+        // Amplitude envelope parameters
+        .function("setAmpEnvAttack", &WebSynth::setAmpEnvAttack)
+        .function("setAmpEnvDecay", &WebSynth::setAmpEnvDecay)
+        .function("setAmpEnvSustain", &WebSynth::setAmpEnvSustain)
+        .function("setAmpEnvRelease", &WebSynth::setAmpEnvRelease)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)
