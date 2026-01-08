@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include "../../dsp/oscillator.h"
+#include "../../dsp/dco.h"
+#include "../../dsp/parameters.h"
 #include "../../dsp/types.h"
 
 using namespace emscripten;
@@ -15,10 +16,24 @@ public:
     WebSynth(float sampleRate)
         : sampleRate_(sampleRate)
         , noteOn_(false)
+        , lfoPhase_(0.0f)
+        , lfoRate_(2.0f)
     {
-        osc_.setSampleRate(sampleRate);
-        osc_.setFrequency(440.0f);
-        osc_.setAmplitude(0.5f);
+        dco_.setSampleRate(sampleRate);
+        dco_.setFrequency(440.0f);
+
+        // Default parameters - sawtooth wave
+        params_.sawLevel = 0.5f;
+        params_.pulseLevel = 0.0f;
+        params_.subLevel = 0.0f;
+        params_.noiseLevel = 0.0f;
+        params_.pulseWidth = 0.5f;
+        params_.pwmDepth = 0.0f;
+        params_.lfoTarget = DcoParams::LFO_OFF;
+        params_.detune = 0.0f;
+        params_.enableDrift = true;
+
+        dco_.setParameters(params_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -27,7 +42,14 @@ public:
         float* right = reinterpret_cast<float*>(rightPtr);
 
         for (int i = 0; i < numSamples; ++i) {
-            float sample = noteOn_ ? osc_.process() : 0.0f;
+            // Update LFO
+            float lfoValue = std::sin(lfoPhase_ * TWO_PI);
+            dco_.setLfoValue(lfoValue);
+            lfoPhase_ += lfoRate_ / sampleRate_;
+            if (lfoPhase_ >= 1.0f) lfoPhase_ -= 1.0f;
+
+            // Generate sample
+            float sample = noteOn_ ? dco_.process() : 0.0f;
             left[i] = sample;
             right[i] = sample;
         }
@@ -39,32 +61,88 @@ public:
 
         if (statusByte == MIDI_NOTE_ON && data2 > 0) {
             float freq = midiNoteToFrequency(data1);
-            osc_.setFrequency(freq);
-            float amplitude = (data2 / 127.0f) * 0.5f;
-            osc_.setAmplitude(amplitude);
+            dco_.setFrequency(freq);
+            dco_.noteOn();
             noteOn_ = true;
         } else if (statusByte == MIDI_NOTE_OFF || (statusByte == MIDI_NOTE_ON && data2 == 0)) {
+            dco_.noteOff();
             noteOn_ = false;
         }
     }
 
-    // Parameter control
-    void setFrequency(float freq) {
-        osc_.setFrequency(freq);
+    // Parameter control - DCO
+    void setSawLevel(float level) {
+        params_.sawLevel = level;
+        dco_.setParameters(params_);
     }
 
-    void setAmplitude(float amp) {
-        osc_.setAmplitude(amp);
+    void setPulseLevel(float level) {
+        params_.pulseLevel = level;
+        dco_.setParameters(params_);
+    }
+
+    void setSubLevel(float level) {
+        params_.subLevel = level;
+        dco_.setParameters(params_);
+    }
+
+    void setNoiseLevel(float level) {
+        params_.noiseLevel = level;
+        dco_.setParameters(params_);
+    }
+
+    void setPulseWidth(float width) {
+        params_.pulseWidth = width;
+        dco_.setParameters(params_);
+    }
+
+    void setPwmDepth(float depth) {
+        params_.pwmDepth = depth;
+        dco_.setParameters(params_);
+    }
+
+    void setLfoTarget(int target) {
+        params_.lfoTarget = target;
+        dco_.setParameters(params_);
+    }
+
+    void setLfoRate(float rate) {
+        lfoRate_ = rate;
+    }
+
+    void setDetune(float cents) {
+        params_.detune = cents;
+        dco_.setParameters(params_);
+    }
+
+    void setDriftEnabled(bool enabled) {
+        params_.enableDrift = enabled;
+        dco_.setParameters(params_);
+    }
+
+    // Legacy interface for compatibility
+    void setFrequency(float freq) {
+        dco_.setFrequency(freq);
     }
 
     void setNoteOn(bool on) {
+        if (on && !noteOn_) {
+            dco_.noteOn();
+        } else if (!on && noteOn_) {
+            dco_.noteOff();
+        }
         noteOn_ = on;
     }
 
 private:
     float sampleRate_;
-    SineOscillator osc_;
+    Dco dco_;
+    DcoParams params_;
     bool noteOn_;
+
+    // Simple LFO (will be replaced with proper LFO module later)
+    float lfoPhase_;
+    float lfoRate_;
 };
 
 // Emscripten bindings
@@ -73,8 +151,21 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .constructor<float>()
         .function("process", &WebSynth::process)
         .function("handleMidi", &WebSynth::handleMidi)
+
+        // DCO parameters
+        .function("setSawLevel", &WebSynth::setSawLevel)
+        .function("setPulseLevel", &WebSynth::setPulseLevel)
+        .function("setSubLevel", &WebSynth::setSubLevel)
+        .function("setNoiseLevel", &WebSynth::setNoiseLevel)
+        .function("setPulseWidth", &WebSynth::setPulseWidth)
+        .function("setPwmDepth", &WebSynth::setPwmDepth)
+        .function("setLfoTarget", &WebSynth::setLfoTarget)
+        .function("setLfoRate", &WebSynth::setLfoRate)
+        .function("setDetune", &WebSynth::setDetune)
+        .function("setDriftEnabled", &WebSynth::setDriftEnabled)
+
+        // Legacy
         .function("setFrequency", &WebSynth::setFrequency)
-        .function("setAmplitude", &WebSynth::setAmplitude)
         .function("setNoteOn", &WebSynth::setNoteOn)
         ;
 }

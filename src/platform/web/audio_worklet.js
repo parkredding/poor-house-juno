@@ -27,33 +27,67 @@ class SynthProcessor extends AudioWorkletProcessor {
     handleMessage(event) {
         const { type, data } = event.data;
 
+        if (!synthInstance && type !== 'init') return;
+
         switch (type) {
             case 'init':
                 this.initWasm(data);
                 break;
 
             case 'midi':
-                if (synthInstance && data.length >= 3) {
+                if (data.length >= 3) {
                     synthInstance.handleMidi(data[0], data[1], data[2]);
                 }
                 break;
 
-            case 'setFrequency':
-                if (synthInstance) {
-                    synthInstance.setFrequency(data);
-                }
+            // DCO parameters
+            case 'setSawLevel':
+                synthInstance.setSawLevel(data);
                 break;
 
-            case 'setAmplitude':
-                if (synthInstance) {
-                    synthInstance.setAmplitude(data);
-                }
+            case 'setPulseLevel':
+                synthInstance.setPulseLevel(data);
+                break;
+
+            case 'setSubLevel':
+                synthInstance.setSubLevel(data);
+                break;
+
+            case 'setNoiseLevel':
+                synthInstance.setNoiseLevel(data);
+                break;
+
+            case 'setPulseWidth':
+                synthInstance.setPulseWidth(data);
+                break;
+
+            case 'setPwmDepth':
+                synthInstance.setPwmDepth(data);
+                break;
+
+            case 'setLfoTarget':
+                synthInstance.setLfoTarget(data);
+                break;
+
+            case 'setLfoRate':
+                synthInstance.setLfoRate(data);
+                break;
+
+            case 'setDetune':
+                synthInstance.setDetune(data);
+                break;
+
+            case 'setDriftEnabled':
+                synthInstance.setDriftEnabled(data);
+                break;
+
+            // Legacy
+            case 'setFrequency':
+                synthInstance.setFrequency(data);
                 break;
 
             case 'setNoteOn':
-                if (synthInstance) {
-                    synthInstance.setNoteOn(data);
-                }
+                synthInstance.setNoteOn(data);
                 break;
         }
     }

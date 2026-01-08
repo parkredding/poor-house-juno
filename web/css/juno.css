@@ -176,6 +176,25 @@ select {
     color: #e0e0e0;
     border-radius: 4px;
     font-size: 1em;
+    cursor: pointer;
+}
+
+select:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #00d4ff;
+}
+
+.control input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    margin-right: 10px;
 }
 
 .midi-indicator {

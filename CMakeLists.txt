@@ -34,6 +34,7 @@ endif()
 # DSP library (shared between platforms)
 add_library(phj_dsp STATIC
     src/dsp/oscillator.cpp
+    src/dsp/dco.cpp
 )
 
 target_include_directories(phj_dsp PUBLIC

@@ -3,7 +3,8 @@
 #include <atomic>
 #include "audio_driver.h"
 #include "midi_driver.h"
-#include "../../dsp/oscillator.h"
+#include "../../dsp/dco.h"
+#include "../../dsp/parameters.h"
 
 using namespace phj;
 
@@ -17,9 +18,11 @@ void signalHandler(int signal) {
 
 // Test synth state
 struct TestSynth {
-    SineOscillator osc;
+    Dco dco;
+    DcoParams params;
     bool noteOn;
-    float amplitude;
+    float lfoPhase;
+    float lfoRate;
 };
 
 static TestSynth g_synth;
@@ -29,7 +32,14 @@ void audioCallback(float* left, float* right, int numSamples, void* userData) {
     TestSynth* synth = static_cast<TestSynth*>(userData);
 
     for (int i = 0; i < numSamples; ++i) {
-        float sample = synth->noteOn ? synth->osc.process() : 0.0f;
+        // Update LFO
+        float lfoValue = std::sin(synth->lfoPhase * TWO_PI);
+        synth->dco.setLfoValue(lfoValue);
+        synth->lfoPhase += synth->lfoRate / 48000.0f;
+        if (synth->lfoPhase >= 1.0f) synth->lfoPhase -= 1.0f;
+
+        // Generate sample
+        float sample = synth->noteOn ? synth->dco.process() : 0.0f;
         left[i] = sample;
         right[i] = sample;
     }
@@ -47,12 +57,12 @@ void midiCallback(const uint8_t* data, int length, void* userData) {
 
     if (status == MIDI_NOTE_ON && velocity > 0) {
         float freq = midiNoteToFrequency(note);
-        synth->osc.setFrequency(freq);
-        synth->amplitude = velocity / 127.0f;
-        synth->osc.setAmplitude(synth->amplitude * 0.5f);  // Scale to reasonable level
+        synth->dco.setFrequency(freq);
+        synth->dco.noteOn();
         synth->noteOn = true;
         std::cout << "Note ON: " << (int)note << " (" << freq << " Hz), vel=" << (int)velocity << std::endl;
     } else if (status == MIDI_NOTE_OFF || (status == MIDI_NOTE_ON && velocity == 0)) {
+        synth->dco.noteOff();
         synth->noteOn = false;
         std::cout << "Note OFF: " << (int)note << std::endl;
     }
@@ -67,11 +77,23 @@ int main(int argc, char** argv) {
     signal(SIGTERM, signalHandler);
 
     // Initialize test synth
-    g_synth.osc.setSampleRate(48000.0f);
-    g_synth.osc.setFrequency(440.0f);
-    g_synth.osc.setAmplitude(0.5f);
+    g_synth.dco.setSampleRate(48000.0f);
+    g_synth.dco.setFrequency(440.0f);
     g_synth.noteOn = false;
-    g_synth.amplitude = 0.5f;
+    g_synth.lfoPhase = 0.0f;
+    g_synth.lfoRate = 2.0f;
+
+    // Setup DCO parameters - sawtooth wave
+    g_synth.params.sawLevel = 0.5f;
+    g_synth.params.pulseLevel = 0.0f;
+    g_synth.params.subLevel = 0.0f;
+    g_synth.params.noiseLevel = 0.0f;
+    g_synth.params.pulseWidth = 0.5f;
+    g_synth.params.pwmDepth = 0.0f;
+    g_synth.params.lfoTarget = DcoParams::LFO_OFF;
+    g_synth.params.detune = 0.0f;
+    g_synth.params.enableDrift = true;
+    g_synth.dco.setParameters(g_synth.params);
 
     // Initialize audio driver
     AudioDriver audio;

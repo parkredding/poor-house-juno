@@ -86,22 +86,61 @@ export class AudioEngine {
         });
     }
 
-    setFrequency(freq) {
+    // DCO parameter methods
+    setSawLevel(level) {
         if (!this.initialized || !this.workletNode) return;
-
-        this.workletNode.port.postMessage({
-            type: 'setFrequency',
-            data: freq
-        });
+        this.workletNode.port.postMessage({ type: 'setSawLevel', data: level });
     }
 
-    setAmplitude(amp) {
+    setPulseLevel(level) {
         if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPulseLevel', data: level });
+    }
 
-        this.workletNode.port.postMessage({
-            type: 'setAmplitude',
-            data: amp
-        });
+    setSubLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setSubLevel', data: level });
+    }
+
+    setNoiseLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setNoiseLevel', data: level });
+    }
+
+    setPulseWidth(width) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPulseWidth', data: width });
+    }
+
+    setPwmDepth(depth) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPwmDepth', data: depth });
+    }
+
+    setLfoTarget(target) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoTarget', data: target });
+    }
+
+    setLfoRate(rate) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoRate', data: rate });
+    }
+
+    setDetune(cents) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDetune', data: cents });
+    }
+
+    setDriftEnabled(enabled) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDriftEnabled', data: enabled });
+    }
+
+    // Legacy methods (for compatibility)
+    setFrequency(freq) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFrequency', data: freq });
     }
 
     getInfo() {

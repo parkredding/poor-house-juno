@@ -50,21 +50,63 @@ class App {
             this.stopTestNote();
         });
 
-        // Parameter controls
-        document.getElementById('frequency').addEventListener('input', (e) => {
-            const freq = parseFloat(e.target.value);
-            document.getElementById('frequency-value').textContent = `${freq} Hz`;
-            if (this.audioEngine) {
-                this.audioEngine.setFrequency(freq);
-            }
+        // DCO Parameter controls
+        document.getElementById('saw-level').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('saw-level-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setSawLevel(value);
         });
 
-        document.getElementById('amplitude').addEventListener('input', (e) => {
-            const amp = parseFloat(e.target.value) / 100;
-            document.getElementById('amplitude-value').textContent = `${e.target.value}%`;
-            if (this.audioEngine) {
-                this.audioEngine.setAmplitude(amp);
-            }
+        document.getElementById('pulse-level').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('pulse-level-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setPulseLevel(value);
+        });
+
+        document.getElementById('sub-level').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('sub-level-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setSubLevel(value);
+        });
+
+        document.getElementById('noise-level').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('noise-level-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setNoiseLevel(value);
+        });
+
+        document.getElementById('pulse-width').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('pulse-width-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setPulseWidth(value);
+        });
+
+        document.getElementById('pwm-depth').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('pwm-depth-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setPwmDepth(value);
+        });
+
+        document.getElementById('detune').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('detune-value').textContent = value.toFixed(1);
+            if (this.audioEngine) this.audioEngine.setDetune(value);
+        });
+
+        document.getElementById('drift-enabled').addEventListener('change', (e) => {
+            if (this.audioEngine) this.audioEngine.setDriftEnabled(e.target.checked);
+        });
+
+        // LFO controls
+        document.getElementById('lfo-rate').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('lfo-rate-value').textContent = `${value.toFixed(1)} Hz`;
+            if (this.audioEngine) this.audioEngine.setLfoRate(value);
+        });
+
+        document.getElementById('lfo-target').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setLfoTarget(value);
         });
 
         // MIDI device selection
