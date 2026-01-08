@@ -1,0 +1,60 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Generated WASM files
+web/synth-processor.js
+web/synth-processor.wasm
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# C/C++ build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Emscripten cache
+.emscripten_cache/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Test outputs
+tests/reference/samples/*.wav
+tests/reference/samples/*.mp3
+
+# User presets
+src/ui/presets/user/*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Node modules (if we add any JS tooling later)
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db

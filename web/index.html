@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poor House Juno - Web Test</title>
+    <link rel="stylesheet" href="css/juno.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Poor House Juno</h1>
+            <p class="subtitle">Roland Juno-106 Emulator - Test Environment</p>
+        </header>
+
+        <div class="status-bar">
+            <div id="status">Initializing...</div>
+            <div id="cpu-meter">CPU: <span id="cpu-value">0%</span></div>
+        </div>
+
+        <div class="synth-panel">
+            <!-- DCO Section -->
+            <div class="section">
+                <h2>DCO</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="frequency">Frequency</label>
+                        <input type="range" id="frequency" min="20" max="2000" value="440" step="1">
+                        <span id="frequency-value">440 Hz</span>
+                    </div>
+                    <div class="control">
+                        <label for="amplitude">Amplitude</label>
+                        <input type="range" id="amplitude" min="0" max="100" value="50" step="1">
+                        <span id="amplitude-value">50%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Controls -->
+            <div class="section">
+                <h2>Test</h2>
+                <div class="controls">
+                    <button id="start-audio" class="primary">Start Audio</button>
+                    <button id="play-note" disabled>Play A4 (440 Hz)</button>
+                    <button id="stop-note" disabled>Stop Note</button>
+                </div>
+            </div>
+
+            <!-- MIDI Section -->
+            <div class="section">
+                <h2>MIDI</h2>
+                <div class="controls">
+                    <select id="midi-input">
+                        <option value="">No MIDI device</option>
+                    </select>
+                    <div id="midi-activity" class="midi-indicator"></div>
+                </div>
+                <div id="midi-log" class="log"></div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="section">
+                <h2>Scope</h2>
+                <canvas id="oscilloscope" width="800" height="200"></canvas>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Sample Rate: <span id="sample-rate">-</span> Hz |
+                Buffer Size: <span id="buffer-size">-</span> samples |
+                Latency: <span id="latency">-</span> ms
+            </p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
