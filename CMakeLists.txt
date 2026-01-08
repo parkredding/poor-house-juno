@@ -35,6 +35,8 @@ endif()
 add_library(phj_dsp STATIC
     src/dsp/oscillator.cpp
     src/dsp/dco.cpp
+    src/dsp/filter.cpp
+    src/dsp/envelope.cpp
 )
 
 target_include_directories(phj_dsp PUBLIC

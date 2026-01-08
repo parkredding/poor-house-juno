@@ -4,6 +4,8 @@
 #include "audio_driver.h"
 #include "midi_driver.h"
 #include "../../dsp/dco.h"
+#include "../../dsp/filter.h"
+#include "../../dsp/envelope.h"
 #include "../../dsp/parameters.h"
 
 using namespace phj;
@@ -19,10 +21,15 @@ void signalHandler(int signal) {
 // Test synth state
 struct TestSynth {
     Dco dco;
-    DcoParams params;
+    Filter filter;
+    Envelope filterEnv;
+    DcoParams dcoParams;
+    FilterParams filterParams;
+    EnvelopeParams filterEnvParams;
     bool noteOn;
     float lfoPhase;
     float lfoRate;
+    float currentFreq;
 };
 
 static TestSynth g_synth;
@@ -35,11 +42,20 @@ void audioCallback(float* left, float* right, int numSamples, void* userData) {
         // Update LFO
         float lfoValue = std::sin(synth->lfoPhase * TWO_PI);
         synth->dco.setLfoValue(lfoValue);
+        synth->filter.setLfoValue(lfoValue);
         synth->lfoPhase += synth->lfoRate / 48000.0f;
         if (synth->lfoPhase >= 1.0f) synth->lfoPhase -= 1.0f;
 
-        // Generate sample
-        float sample = synth->noteOn ? synth->dco.process() : 0.0f;
+        // Update filter envelope
+        float envValue = synth->filterEnv.process();
+        synth->filter.setEnvValue(envValue);
+
+        // Generate DCO sample
+        float dcoOut = synth->noteOn ? synth->dco.process() : 0.0f;
+
+        // Process through filter
+        float sample = synth->filter.process(dcoOut);
+
         left[i] = sample;
         right[i] = sample;
     }
@@ -56,13 +72,16 @@ void midiCallback(const uint8_t* data, int length, void* userData) {
     uint8_t velocity = data[2];
 
     if (status == MIDI_NOTE_ON && velocity > 0) {
-        float freq = midiNoteToFrequency(note);
-        synth->dco.setFrequency(freq);
+        synth->currentFreq = midiNoteToFrequency(note);
+        synth->dco.setFrequency(synth->currentFreq);
         synth->dco.noteOn();
+        synth->filter.setNoteFrequency(synth->currentFreq);
+        synth->filterEnv.noteOn();
         synth->noteOn = true;
-        std::cout << "Note ON: " << (int)note << " (" << freq << " Hz), vel=" << (int)velocity << std::endl;
+        std::cout << "Note ON: " << (int)note << " (" << synth->currentFreq << " Hz), vel=" << (int)velocity << std::endl;
     } else if (status == MIDI_NOTE_OFF || (status == MIDI_NOTE_ON && velocity == 0)) {
         synth->dco.noteOff();
+        synth->filterEnv.noteOff();
         synth->noteOn = false;
         std::cout << "Note OFF: " << (int)note << std::endl;
     }
@@ -79,21 +98,40 @@ int main(int argc, char** argv) {
     // Initialize test synth
     g_synth.dco.setSampleRate(48000.0f);
     g_synth.dco.setFrequency(440.0f);
+    g_synth.filter.setSampleRate(48000.0f);
+    g_synth.filterEnv.setSampleRate(48000.0f);
     g_synth.noteOn = false;
     g_synth.lfoPhase = 0.0f;
     g_synth.lfoRate = 2.0f;
+    g_synth.currentFreq = 440.0f;
 
     // Setup DCO parameters - sawtooth wave
-    g_synth.params.sawLevel = 0.5f;
-    g_synth.params.pulseLevel = 0.0f;
-    g_synth.params.subLevel = 0.0f;
-    g_synth.params.noiseLevel = 0.0f;
-    g_synth.params.pulseWidth = 0.5f;
-    g_synth.params.pwmDepth = 0.0f;
-    g_synth.params.lfoTarget = DcoParams::LFO_OFF;
-    g_synth.params.detune = 0.0f;
-    g_synth.params.enableDrift = true;
-    g_synth.dco.setParameters(g_synth.params);
+    g_synth.dcoParams.sawLevel = 0.5f;
+    g_synth.dcoParams.pulseLevel = 0.0f;
+    g_synth.dcoParams.subLevel = 0.0f;
+    g_synth.dcoParams.noiseLevel = 0.0f;
+    g_synth.dcoParams.pulseWidth = 0.5f;
+    g_synth.dcoParams.pwmDepth = 0.0f;
+    g_synth.dcoParams.lfoTarget = DcoParams::LFO_OFF;
+    g_synth.dcoParams.detune = 0.0f;
+    g_synth.dcoParams.enableDrift = true;
+    g_synth.dco.setParameters(g_synth.dcoParams);
+
+    // Setup filter parameters
+    g_synth.filterParams.cutoff = 0.8f;  // Start fairly open
+    g_synth.filterParams.resonance = 0.0f;
+    g_synth.filterParams.envAmount = 0.0f;
+    g_synth.filterParams.lfoAmount = 0.0f;
+    g_synth.filterParams.keyTrack = FilterParams::KEY_TRACK_OFF;
+    g_synth.filterParams.drive = 1.0f;
+    g_synth.filter.setParameters(g_synth.filterParams);
+
+    // Setup filter envelope
+    g_synth.filterEnvParams.attack = 0.01f;
+    g_synth.filterEnvParams.decay = 0.3f;
+    g_synth.filterEnvParams.sustain = 0.7f;
+    g_synth.filterEnvParams.release = 0.5f;
+    g_synth.filterEnv.setParameters(g_synth.filterEnvParams);
 
     // Initialize audio driver
     AudioDriver audio;

@@ -137,6 +137,53 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setDriftEnabled', data: enabled });
     }
 
+    // Filter parameter methods
+    setFilterCutoff(cutoff) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterCutoff', data: cutoff });
+    }
+
+    setFilterResonance(resonance) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterResonance', data: resonance });
+    }
+
+    setFilterEnvAmount(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvAmount', data: amount });
+    }
+
+    setFilterLfoAmount(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterLfoAmount', data: amount });
+    }
+
+    setFilterKeyTrack(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterKeyTrack', data: mode });
+    }
+
+    // Filter envelope parameter methods
+    setFilterEnvAttack(attack) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvAttack', data: attack });
+    }
+
+    setFilterEnvDecay(decay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvDecay', data: decay });
+    }
+
+    setFilterEnvSustain(sustain) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvSustain', data: sustain });
+    }
+
+    setFilterEnvRelease(release) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvRelease', data: release });
+    }
+
     // Legacy methods (for compatibility)
     setFrequency(freq) {
         if (!this.initialized || !this.workletNode) return;

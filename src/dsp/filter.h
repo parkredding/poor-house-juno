@@ -1,0 +1,65 @@
+#pragma once
+
+#include "types.h"
+#include "parameters.h"
+
+namespace phj {
+
+/**
+ * IR3109 4-Pole Ladder Filter Emulation
+ *
+ * Uses Zero-Delay Feedback (ZDF) topology for accurate resonance
+ * and self-oscillation behavior.
+ *
+ * Features:
+ * - 24dB/octave lowpass characteristic
+ * - Self-oscillation at high resonance
+ * - Envelope modulation (bipolar)
+ * - LFO modulation
+ * - Key tracking (0%, 50%, 100%)
+ * - Subtle saturation for IR3109 character
+ */
+class Filter {
+public:
+    Filter();
+
+    void setSampleRate(float sampleRate);
+    void setParameters(const FilterParams& params);
+    void setEnvValue(float envValue);   // 0.0 - 1.0
+    void setLfoValue(float lfoValue);   // -1.0 - 1.0
+    void setNoteFrequency(float noteFreq);  // For key tracking
+
+    void reset();
+
+    // Process single sample
+    Sample process(Sample input);
+
+    // Process buffer
+    void process(const Sample* input, Sample* output, int numSamples);
+
+private:
+    float sampleRate_;
+    FilterParams params_;
+
+    // Modulation sources
+    float envValue_;
+    float lfoValue_;
+    float noteFrequency_;
+
+    // Filter state (4 stages for 4-pole)
+    float stage1_;
+    float stage2_;
+    float stage3_;
+    float stage4_;
+
+    // ZDF coefficients
+    float g_;           // Cutoff coefficient
+    float k_;           // Resonance coefficient
+
+    // Helper methods
+    void updateCoefficients();
+    float calculateCutoffHz();
+    float saturate(float x);  // Soft saturation
+};
+
+} // namespace phj

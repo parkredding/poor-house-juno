@@ -109,6 +109,55 @@ class App {
             if (this.audioEngine) this.audioEngine.setLfoTarget(value);
         });
 
+        // Filter controls
+        document.getElementById('filter-cutoff').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('filter-cutoff-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setFilterCutoff(value);
+        });
+
+        document.getElementById('filter-resonance').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('filter-resonance-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setFilterResonance(value);
+        });
+
+        document.getElementById('filter-env-amount').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('filter-env-amount-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setFilterEnvAmount(value);
+        });
+
+        document.getElementById('filter-key-track').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setFilterKeyTrack(value);
+        });
+
+        // Filter envelope controls
+        document.getElementById('filter-env-attack').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;  // Convert ms to seconds
+            document.getElementById('filter-env-attack-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setFilterEnvAttack(value);
+        });
+
+        document.getElementById('filter-env-decay').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;
+            document.getElementById('filter-env-decay-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setFilterEnvDecay(value);
+        });
+
+        document.getElementById('filter-env-sustain').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('filter-env-sustain-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setFilterEnvSustain(value);
+        });
+
+        document.getElementById('filter-env-release').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 1000;
+            document.getElementById('filter-env-release-value').textContent = `${e.target.value}ms`;
+            if (this.audioEngine) this.audioEngine.setFilterEnvRelease(value);
+        });
+
         // MIDI device selection
         document.getElementById('midi-input').addEventListener('change', (e) => {
             this.selectMidiDevice(e.target.value);

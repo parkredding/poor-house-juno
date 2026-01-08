@@ -68,6 +68,63 @@
                 </div>
             </div>
 
+            <!-- Filter Section -->
+            <div class="section">
+                <h2>Filter (IR3109 4-Pole Ladder)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="filter-cutoff">Cutoff</label>
+                        <input type="range" id="filter-cutoff" min="0" max="100" value="80" step="1">
+                        <span id="filter-cutoff-value">80%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-resonance">Resonance</label>
+                        <input type="range" id="filter-resonance" min="0" max="100" value="0" step="1">
+                        <span id="filter-resonance-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-amount">Env Amount</label>
+                        <input type="range" id="filter-env-amount" min="-100" max="100" value="0" step="1">
+                        <span id="filter-env-amount-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-key-track">Key Tracking</label>
+                        <select id="filter-key-track">
+                            <option value="0">Off</option>
+                            <option value="1">Half</option>
+                            <option value="2">Full</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Envelope Section -->
+            <div class="section">
+                <h2>Filter Envelope (ADSR)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="filter-env-attack">Attack</label>
+                        <input type="range" id="filter-env-attack" min="1" max="3000" value="10" step="1">
+                        <span id="filter-env-attack-value">10ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-decay">Decay</label>
+                        <input type="range" id="filter-env-decay" min="2" max="12000" value="300" step="1">
+                        <span id="filter-env-decay-value">300ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-sustain">Sustain</label>
+                        <input type="range" id="filter-env-sustain" min="0" max="100" value="70" step="1">
+                        <span id="filter-env-sustain-value">70%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-release">Release</label>
+                        <input type="range" id="filter-env-release" min="2" max="12000" value="500" step="1">
+                        <span id="filter-env-release-value">500ms</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- LFO Section -->
             <div class="section">
                 <h2>LFO</h2>

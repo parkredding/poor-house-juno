@@ -1,6 +1,8 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include "../../dsp/dco.h"
+#include "../../dsp/filter.h"
+#include "../../dsp/envelope.h"
 #include "../../dsp/parameters.h"
 #include "../../dsp/types.h"
 
@@ -18,22 +20,40 @@ public:
         , noteOn_(false)
         , lfoPhase_(0.0f)
         , lfoRate_(2.0f)
+        , currentFreq_(440.0f)
     {
         dco_.setSampleRate(sampleRate);
         dco_.setFrequency(440.0f);
+        filter_.setSampleRate(sampleRate);
+        filterEnv_.setSampleRate(sampleRate);
 
-        // Default parameters - sawtooth wave
-        params_.sawLevel = 0.5f;
-        params_.pulseLevel = 0.0f;
-        params_.subLevel = 0.0f;
-        params_.noiseLevel = 0.0f;
-        params_.pulseWidth = 0.5f;
-        params_.pwmDepth = 0.0f;
-        params_.lfoTarget = DcoParams::LFO_OFF;
-        params_.detune = 0.0f;
-        params_.enableDrift = true;
+        // Default DCO parameters - sawtooth wave
+        dcoParams_.sawLevel = 0.5f;
+        dcoParams_.pulseLevel = 0.0f;
+        dcoParams_.subLevel = 0.0f;
+        dcoParams_.noiseLevel = 0.0f;
+        dcoParams_.pulseWidth = 0.5f;
+        dcoParams_.pwmDepth = 0.0f;
+        dcoParams_.lfoTarget = DcoParams::LFO_OFF;
+        dcoParams_.detune = 0.0f;
+        dcoParams_.enableDrift = true;
+        dco_.setParameters(dcoParams_);
 
-        dco_.setParameters(params_);
+        // Default filter parameters
+        filterParams_.cutoff = 0.8f;  // Start fairly open
+        filterParams_.resonance = 0.0f;
+        filterParams_.envAmount = 0.0f;
+        filterParams_.lfoAmount = 0.0f;
+        filterParams_.keyTrack = FilterParams::KEY_TRACK_OFF;
+        filterParams_.drive = 1.0f;
+        filter_.setParameters(filterParams_);
+
+        // Default envelope parameters
+        filterEnvParams_.attack = 0.01f;
+        filterEnvParams_.decay = 0.3f;
+        filterEnvParams_.sustain = 0.7f;
+        filterEnvParams_.release = 0.5f;
+        filterEnv_.setParameters(filterEnvParams_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -45,11 +65,20 @@ public:
             // Update LFO
             float lfoValue = std::sin(lfoPhase_ * TWO_PI);
             dco_.setLfoValue(lfoValue);
+            filter_.setLfoValue(lfoValue);
             lfoPhase_ += lfoRate_ / sampleRate_;
             if (lfoPhase_ >= 1.0f) lfoPhase_ -= 1.0f;
 
-            // Generate sample
-            float sample = noteOn_ ? dco_.process() : 0.0f;
+            // Update filter envelope
+            float envValue = filterEnv_.process();
+            filter_.setEnvValue(envValue);
+
+            // Generate DCO sample
+            float dcoOut = noteOn_ ? dco_.process() : 0.0f;
+
+            // Process through filter
+            float sample = filter_.process(dcoOut);
+
             left[i] = sample;
             right[i] = sample;
         }
@@ -60,50 +89,53 @@ public:
         uint8_t statusByte = status & 0xF0;
 
         if (statusByte == MIDI_NOTE_ON && data2 > 0) {
-            float freq = midiNoteToFrequency(data1);
-            dco_.setFrequency(freq);
+            currentFreq_ = midiNoteToFrequency(data1);
+            dco_.setFrequency(currentFreq_);
             dco_.noteOn();
+            filter_.setNoteFrequency(currentFreq_);
+            filterEnv_.noteOn();
             noteOn_ = true;
         } else if (statusByte == MIDI_NOTE_OFF || (statusByte == MIDI_NOTE_ON && data2 == 0)) {
             dco_.noteOff();
+            filterEnv_.noteOff();
             noteOn_ = false;
         }
     }
 
     // Parameter control - DCO
     void setSawLevel(float level) {
-        params_.sawLevel = level;
-        dco_.setParameters(params_);
+        dcoParams_.sawLevel = level;
+        dco_.setParameters(dcoParams_);
     }
 
     void setPulseLevel(float level) {
-        params_.pulseLevel = level;
-        dco_.setParameters(params_);
+        dcoParams_.pulseLevel = level;
+        dco_.setParameters(dcoParams_);
     }
 
     void setSubLevel(float level) {
-        params_.subLevel = level;
-        dco_.setParameters(params_);
+        dcoParams_.subLevel = level;
+        dco_.setParameters(dcoParams_);
     }
 
     void setNoiseLevel(float level) {
-        params_.noiseLevel = level;
-        dco_.setParameters(params_);
+        dcoParams_.noiseLevel = level;
+        dco_.setParameters(dcoParams_);
     }
 
     void setPulseWidth(float width) {
-        params_.pulseWidth = width;
-        dco_.setParameters(params_);
+        dcoParams_.pulseWidth = width;
+        dco_.setParameters(dcoParams_);
     }
 
     void setPwmDepth(float depth) {
-        params_.pwmDepth = depth;
-        dco_.setParameters(params_);
+        dcoParams_.pwmDepth = depth;
+        dco_.setParameters(dcoParams_);
     }
 
     void setLfoTarget(int target) {
-        params_.lfoTarget = target;
-        dco_.setParameters(params_);
+        dcoParams_.lfoTarget = target;
+        dco_.setParameters(dcoParams_);
     }
 
     void setLfoRate(float rate) {
@@ -111,13 +143,60 @@ public:
     }
 
     void setDetune(float cents) {
-        params_.detune = cents;
-        dco_.setParameters(params_);
+        dcoParams_.detune = cents;
+        dco_.setParameters(dcoParams_);
     }
 
     void setDriftEnabled(bool enabled) {
-        params_.enableDrift = enabled;
-        dco_.setParameters(params_);
+        dcoParams_.enableDrift = enabled;
+        dco_.setParameters(dcoParams_);
+    }
+
+    // Parameter control - Filter
+    void setFilterCutoff(float cutoff) {
+        filterParams_.cutoff = cutoff;
+        filter_.setParameters(filterParams_);
+    }
+
+    void setFilterResonance(float resonance) {
+        filterParams_.resonance = resonance;
+        filter_.setParameters(filterParams_);
+    }
+
+    void setFilterEnvAmount(float amount) {
+        filterParams_.envAmount = amount;
+        filter_.setParameters(filterParams_);
+    }
+
+    void setFilterLfoAmount(float amount) {
+        filterParams_.lfoAmount = amount;
+        filter_.setParameters(filterParams_);
+    }
+
+    void setFilterKeyTrack(int mode) {
+        filterParams_.keyTrack = mode;
+        filter_.setParameters(filterParams_);
+    }
+
+    // Parameter control - Filter Envelope
+    void setFilterEnvAttack(float attack) {
+        filterEnvParams_.attack = attack;
+        filterEnv_.setParameters(filterEnvParams_);
+    }
+
+    void setFilterEnvDecay(float decay) {
+        filterEnvParams_.decay = decay;
+        filterEnv_.setParameters(filterEnvParams_);
+    }
+
+    void setFilterEnvSustain(float sustain) {
+        filterEnvParams_.sustain = sustain;
+        filterEnv_.setParameters(filterEnvParams_);
+    }
+
+    void setFilterEnvRelease(float release) {
+        filterEnvParams_.release = release;
+        filterEnv_.setParameters(filterEnvParams_);
     }
 
     // Legacy interface for compatibility
@@ -137,8 +216,15 @@ public:
 private:
     float sampleRate_;
     Dco dco_;
-    DcoParams params_;
+    Filter filter_;
+    Envelope filterEnv_;
+
+    DcoParams dcoParams_;
+    FilterParams filterParams_;
+    EnvelopeParams filterEnvParams_;
+
     bool noteOn_;
+    float currentFreq_;
 
     // Simple LFO (will be replaced with proper LFO module later)
     float lfoPhase_;
@@ -163,6 +249,19 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setLfoRate", &WebSynth::setLfoRate)
         .function("setDetune", &WebSynth::setDetune)
         .function("setDriftEnabled", &WebSynth::setDriftEnabled)
+
+        // Filter parameters
+        .function("setFilterCutoff", &WebSynth::setFilterCutoff)
+        .function("setFilterResonance", &WebSynth::setFilterResonance)
+        .function("setFilterEnvAmount", &WebSynth::setFilterEnvAmount)
+        .function("setFilterLfoAmount", &WebSynth::setFilterLfoAmount)
+        .function("setFilterKeyTrack", &WebSynth::setFilterKeyTrack)
+
+        // Filter envelope parameters
+        .function("setFilterEnvAttack", &WebSynth::setFilterEnvAttack)
+        .function("setFilterEnvDecay", &WebSynth::setFilterEnvDecay)
+        .function("setFilterEnvSustain", &WebSynth::setFilterEnvSustain)
+        .function("setFilterEnvRelease", &WebSynth::setFilterEnvRelease)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)

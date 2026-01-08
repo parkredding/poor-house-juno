@@ -81,6 +81,44 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setDriftEnabled(data);
                 break;
 
+            // Filter parameters
+            case 'setFilterCutoff':
+                synthInstance.setFilterCutoff(data);
+                break;
+
+            case 'setFilterResonance':
+                synthInstance.setFilterResonance(data);
+                break;
+
+            case 'setFilterEnvAmount':
+                synthInstance.setFilterEnvAmount(data);
+                break;
+
+            case 'setFilterLfoAmount':
+                synthInstance.setFilterLfoAmount(data);
+                break;
+
+            case 'setFilterKeyTrack':
+                synthInstance.setFilterKeyTrack(data);
+                break;
+
+            // Filter envelope parameters
+            case 'setFilterEnvAttack':
+                synthInstance.setFilterEnvAttack(data);
+                break;
+
+            case 'setFilterEnvDecay':
+                synthInstance.setFilterEnvDecay(data);
+                break;
+
+            case 'setFilterEnvSustain':
+                synthInstance.setFilterEnvSustain(data);
+                break;
+
+            case 'setFilterEnvRelease':
+                synthInstance.setFilterEnvRelease(data);
+                break;
+
             // Legacy
             case 'setFrequency':
                 synthInstance.setFrequency(data);
