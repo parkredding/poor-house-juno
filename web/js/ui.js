@@ -57,7 +57,7 @@ export class UI {
         }
     }
 
-    // Simple oscilloscope visualization
+    // Improved oscilloscope visualization
     startOscilloscope(analyser) {
         const canvas = document.getElementById('oscilloscope');
         if (!canvas) return;
@@ -66,16 +66,53 @@ export class UI {
         const bufferLength = analyser.fftSize;
         const dataArray = new Float32Array(bufferLength);
 
+        // Draw grid
+        const drawGrid = () => {
+            ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+            ctx.lineWidth = 1;
+
+            // Horizontal lines
+            for (let i = 0; i <= 4; i++) {
+                const y = (canvas.height / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Vertical lines
+            for (let i = 0; i <= 8; i++) {
+                const x = (canvas.width / 8) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            // Center line (emphasized)
+            ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+        };
+
         const draw = () => {
             requestAnimationFrame(draw);
 
             analyser.getFloatTimeDomainData(dataArray);
 
-            // Clear canvas
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            // Clear canvas with fade effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw waveform
+            // Draw grid
+            drawGrid();
+
+            // Draw waveform with glow effect
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00d4ff';
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#00d4ff';
             ctx.beginPath();
@@ -85,7 +122,7 @@ export class UI {
 
             for (let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i];
-                const y = (v + 1) * canvas.height / 2;
+                const y = ((v + 1) * canvas.height / 2);
 
                 if (i === 0) {
                     ctx.moveTo(x, y);
@@ -97,6 +134,9 @@ export class UI {
             }
 
             ctx.stroke();
+
+            // Reset shadow for next frame
+            ctx.shadowBlur = 0;
         };
 
         draw();

@@ -6,13 +6,19 @@
 import { AudioEngine } from './audio.js';
 import { MidiHandler } from './midi.js';
 import { UI } from './ui.js';
+import { VirtualKeyboard } from './keyboard.js';
+import { PresetManager } from './presets.js';
 
 class App {
     constructor() {
         this.audioEngine = null;
         this.midiHandler = null;
         this.ui = null;
+        this.keyboard = null;
+        this.presetManager = null;
         this.running = false;
+        this.activeNotes = new Map(); // Track active notes for voice indicator
+        this.cpuUpdateInterval = null;
     }
 
     async init() {
@@ -22,8 +28,15 @@ class App {
         this.ui = new UI();
         this.ui.setStatus('Ready - Click "Start Audio" to begin');
 
+        // Initialize preset manager
+        this.presetManager = new PresetManager();
+        this.populatePresetList();
+
         // Setup event listeners
         this.setupEventListeners();
+
+        // Initialize virtual keyboard (will be connected to audio engine when started)
+        this.keyboard = new VirtualKeyboard((data) => this.handleKeyboardMidi(data));
 
         // Initialize MIDI (doesn't require user gesture)
         this.midiHandler = new MidiHandler();
@@ -193,6 +206,25 @@ class App {
         document.getElementById('midi-input').addEventListener('change', (e) => {
             this.selectMidiDevice(e.target.value);
         });
+
+        // Preset controls
+        document.getElementById('preset-load').addEventListener('click', () => {
+            this.loadPreset();
+        });
+
+        document.getElementById('preset-save').addEventListener('click', () => {
+            this.savePreset();
+        });
+
+        document.getElementById('preset-delete').addEventListener('click', () => {
+            this.deletePreset();
+        });
+
+        document.getElementById('preset-select').addEventListener('change', (e) => {
+            if (e.target.value) {
+                document.getElementById('preset-name').value = e.target.value;
+            }
+        });
     }
 
     async startAudio() {
@@ -211,9 +243,23 @@ class App {
                     if (this.audioEngine) {
                         this.audioEngine.handleMidi(data);
                     }
+                    if (this.keyboard) {
+                        this.keyboard.handleExternalMidi(data);
+                    }
                     this.ui.logMidi(data);
+                    this.trackVoiceActivity(data);
+                    this.flashMidiIndicator();
                 });
             }
+
+            // Start oscilloscope
+            const analyser = this.audioEngine.getAnalyser();
+            if (analyser) {
+                this.ui.startOscilloscope(analyser);
+            }
+
+            // Start CPU monitoring
+            this.startCpuMonitoring();
 
             // Update UI with audio info
             const info = this.audioEngine.getInfo();
@@ -239,16 +285,22 @@ class App {
     playTestNote() {
         if (this.audioEngine) {
             // Send MIDI Note On for A4 (note 69)
-            this.audioEngine.handleMidi([0x90, 69, 100]);
-            this.ui.logMidi([0x90, 69, 100]);
+            const data = [0x90, 69, 100];
+            this.audioEngine.handleMidi(data);
+            this.ui.logMidi(data);
+            this.trackVoiceActivity(data);
+            this.flashMidiIndicator();
         }
     }
 
     stopTestNote() {
         if (this.audioEngine) {
             // Send MIDI Note Off for A4
-            this.audioEngine.handleMidi([0x80, 69, 0]);
-            this.ui.logMidi([0x80, 69, 0]);
+            const data = [0x80, 69, 0];
+            this.audioEngine.handleMidi(data);
+            this.ui.logMidi(data);
+            this.trackVoiceActivity(data);
+            this.flashMidiIndicator();
         }
     }
 
@@ -280,6 +332,210 @@ class App {
             this.ui.setStatus(`MIDI: ${this.midiHandler.getSelectedDeviceName()}`);
         } else {
             this.midiHandler.selectDevice(null);
+        }
+    }
+
+    handleKeyboardMidi(data) {
+        if (this.audioEngine) {
+            this.audioEngine.handleMidi(data);
+        }
+        this.ui.logMidi(data);
+        this.trackVoiceActivity(data);
+        this.flashMidiIndicator();
+    }
+
+    trackVoiceActivity(data) {
+        const [status, note, velocity] = data;
+        const command = status & 0xF0;
+
+        if (command === 0x90 && velocity > 0) {
+            // Note on
+            this.activeNotes.set(note, Date.now());
+        } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
+            // Note off
+            this.activeNotes.delete(note);
+        }
+
+        this.updateVoiceIndicator();
+    }
+
+    updateVoiceIndicator() {
+        const voiceCount = Math.min(this.activeNotes.size, 6);
+        document.getElementById('voice-count').textContent = `${voiceCount}/6`;
+
+        // Update voice dots
+        for (let i = 0; i < 6; i++) {
+            const dot = document.getElementById(`voice-${i}`);
+            if (dot) {
+                if (i < voiceCount) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            }
+        }
+    }
+
+    flashMidiIndicator() {
+        const indicator = document.getElementById('midi-activity');
+        if (indicator) {
+            indicator.classList.add('active');
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 100);
+        }
+    }
+
+    // Preset management
+    populatePresetList() {
+        const select = document.getElementById('preset-select');
+        const names = this.presetManager.getPresetNames();
+
+        // Clear existing options (except first)
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+
+        // Add presets
+        names.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        });
+    }
+
+    loadPreset() {
+        const select = document.getElementById('preset-select');
+        const presetName = select.value;
+
+        if (!presetName) {
+            alert('Please select a preset to load');
+            return;
+        }
+
+        try {
+            const params = this.presetManager.loadPreset(presetName);
+            this.presetManager.applyPresetToUI(params);
+
+            // Apply to audio engine
+            if (this.audioEngine) {
+                this.applyParametersToEngine(params);
+            }
+
+            this.ui.setStatus(`Loaded preset: ${presetName}`);
+        } catch (error) {
+            alert(`Failed to load preset: ${error.message}`);
+        }
+    }
+
+    savePreset() {
+        const nameInput = document.getElementById('preset-name');
+        const presetName = nameInput.value.trim();
+
+        if (!presetName) {
+            alert('Please enter a preset name');
+            return;
+        }
+
+        try {
+            const params = this.presetManager.captureCurrentState();
+            this.presetManager.savePreset(presetName, params);
+            this.populatePresetList();
+
+            // Select the newly saved preset
+            document.getElementById('preset-select').value = presetName;
+
+            this.ui.setStatus(`Saved preset: ${presetName}`);
+        } catch (error) {
+            alert(`Failed to save preset: ${error.message}`);
+        }
+    }
+
+    deletePreset() {
+        const select = document.getElementById('preset-select');
+        const presetName = select.value;
+
+        if (!presetName) {
+            alert('Please select a preset to delete');
+            return;
+        }
+
+        if (!confirm(`Delete preset "${presetName}"?`)) {
+            return;
+        }
+
+        try {
+            this.presetManager.deletePreset(presetName);
+            this.populatePresetList();
+
+            // Clear selection
+            select.value = '';
+            document.getElementById('preset-name').value = '';
+
+            this.ui.setStatus(`Deleted preset: ${presetName}`);
+        } catch (error) {
+            alert(`Failed to delete preset: ${error.message}`);
+        }
+    }
+
+    applyParametersToEngine(params) {
+        if (!this.audioEngine) return;
+
+        // DCO
+        this.audioEngine.setSawLevel(params.sawLevel);
+        this.audioEngine.setPulseLevel(params.pulseLevel);
+        this.audioEngine.setSubLevel(params.subLevel);
+        this.audioEngine.setNoiseLevel(params.noiseLevel);
+        this.audioEngine.setPulseWidth(params.pulseWidth);
+        this.audioEngine.setPwmDepth(params.pwmDepth);
+        this.audioEngine.setDetune(params.detune);
+        this.audioEngine.setDriftEnabled(params.driftEnabled);
+
+        // LFO
+        this.audioEngine.setLfoRate(params.lfoRate);
+        this.audioEngine.setLfoTarget(params.lfoTarget);
+
+        // Filter
+        this.audioEngine.setFilterCutoff(params.filterCutoff);
+        this.audioEngine.setFilterResonance(params.filterResonance);
+        this.audioEngine.setFilterEnvAmount(params.filterEnvAmount);
+        this.audioEngine.setFilterKeyTrack(params.filterKeyTrack);
+
+        // Filter Envelope
+        this.audioEngine.setFilterEnvAttack(params.filterEnvAttack);
+        this.audioEngine.setFilterEnvDecay(params.filterEnvDecay);
+        this.audioEngine.setFilterEnvSustain(params.filterEnvSustain);
+        this.audioEngine.setFilterEnvRelease(params.filterEnvRelease);
+
+        // Amp Envelope
+        this.audioEngine.setAmpEnvAttack(params.ampEnvAttack);
+        this.audioEngine.setAmpEnvDecay(params.ampEnvDecay);
+        this.audioEngine.setAmpEnvSustain(params.ampEnvSustain);
+        this.audioEngine.setAmpEnvRelease(params.ampEnvRelease);
+
+        // Chorus
+        this.audioEngine.setChorusMode(params.chorusMode);
+    }
+
+    startCpuMonitoring() {
+        // Simulate CPU usage (would need WASM profiling for real data)
+        this.cpuUpdateInterval = setInterval(() => {
+            // Estimate based on active voices and effects
+            const voiceLoad = (this.activeNotes.size / 6) * 30; // Max 30% for voices
+            const baseLoad = 5; // Base processing
+            const chorusMode = parseInt(document.getElementById('chorus-mode').value);
+            const chorusLoad = chorusMode > 0 ? 10 : 0;
+
+            const estimatedCpu = Math.min(baseLoad + voiceLoad + chorusLoad, 100);
+            document.getElementById('cpu-value').textContent = `${Math.round(estimatedCpu)}%`;
+        }, 500);
+    }
+
+    stopCpuMonitoring() {
+        if (this.cpuUpdateInterval) {
+            clearInterval(this.cpuUpdateInterval);
+            this.cpuUpdateInterval = null;
         }
     }
 }

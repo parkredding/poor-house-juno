@@ -15,6 +15,18 @@
 
         <div class="status-bar">
             <div id="status">Initializing...</div>
+            <div>
+                <span>Voices: </span>
+                <span id="voice-count">0/6</span>
+                <div class="voice-indicators" style="display: inline-flex; margin-left: 10px;">
+                    <div class="voice-dot" id="voice-0"></div>
+                    <div class="voice-dot" id="voice-1"></div>
+                    <div class="voice-dot" id="voice-2"></div>
+                    <div class="voice-dot" id="voice-3"></div>
+                    <div class="voice-dot" id="voice-4"></div>
+                    <div class="voice-dot" id="voice-5"></div>
+                </div>
+            </div>
             <div id="cpu-meter">CPU: <span id="cpu-value">0%</span></div>
         </div>
 
@@ -186,6 +198,41 @@
                             <option value="3">I+II</option>
                         </select>
                     </div>
+                </div>
+            </div>
+
+            <!-- Virtual Keyboard -->
+            <div class="section">
+                <h2>Virtual Keyboard</h2>
+                <div class="keyboard-controls">
+                    <div class="octave-control">
+                        <button id="octave-down">-</button>
+                        <span>Octave: <span id="octave-display">4</span></span>
+                        <button id="octave-up">+</button>
+                    </div>
+                    <div class="velocity-control">
+                        <label for="velocity-slider">Velocity:</label>
+                        <input type="range" id="velocity-slider" min="1" max="127" value="100" step="1">
+                        <span id="velocity-value">100</span>
+                    </div>
+                </div>
+                <div id="virtual-keyboard"></div>
+                <p style="margin-top: 15px; color: #a0a0a0; font-size: 0.9em; text-align: center;">
+                    Play with mouse or computer keyboard: Z-M keys (white), S-L keys (black)
+                </p>
+            </div>
+
+            <!-- Presets -->
+            <div class="section">
+                <h2>Presets</h2>
+                <div class="preset-controls">
+                    <select id="preset-select">
+                        <option value="">-- Select Preset --</option>
+                    </select>
+                    <button id="preset-load">Load</button>
+                    <input type="text" id="preset-name" class="preset-name-input" placeholder="Preset name...">
+                    <button id="preset-save">Save</button>
+                    <button id="preset-delete">Delete</button>
                 </div>
             </div>
 
