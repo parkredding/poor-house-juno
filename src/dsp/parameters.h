@@ -28,6 +28,14 @@ struct DcoParams {
     };
     int lfoTarget;       // LFO destination
 
+    // M14: Range selection (octave shifting)
+    enum Range {
+        RANGE_16 = 0,    // 16' (down 1 octave)
+        RANGE_8 = 1,     // 8' (normal pitch)
+        RANGE_4 = 2      // 4' (up 1 octave)
+    };
+    int range;           // DCO range/footage
+
     // Voice characteristics
     float detune;        // Per-voice detune in cents (±1 cent typical)
     bool enableDrift;    // Enable pitch drift emulation
@@ -40,6 +48,7 @@ struct DcoParams {
         , pulseWidth(0.5f)
         , pwmDepth(0.0f)
         , lfoTarget(LFO_OFF)
+        , range(RANGE_8)
         , detune(0.0f)
         , enableDrift(true)
     {}
@@ -121,6 +130,7 @@ struct ChorusParams {
 /**
  * M11: Performance parameters (Pitch Bend and Portamento)
  * M13: Performance Controls (Mod Wheel, VCA Mode, Filter Env Polarity)
+ * M14: Range & Voice Control (VCA Level, Velocity Sensitivity, Master Tune)
  */
 struct PerformanceParams {
     float pitchBend;         // -1.0 to 1.0 (pitch bend amount)
@@ -142,6 +152,14 @@ struct PerformanceParams {
     };
     int filterEnvPolarity;   // Filter envelope polarity
 
+    // M14: Range & Voice Control
+    float vcaLevel;          // 0.0 - 1.0 (VCA output level, separate from master volume)
+    float masterTune;        // -50.0 to +50.0 cents (global pitch offset)
+
+    // M14: Velocity sensitivity amounts (0.0 - 1.0 for each parameter)
+    float velocityToFilter;  // How much velocity affects filter cutoff
+    float velocityToAmp;     // How much velocity affects amplitude
+
     PerformanceParams()
         : pitchBend(0.0f)
         , pitchBendRange(2.0f)
@@ -149,6 +167,10 @@ struct PerformanceParams {
         , modWheel(0.0f)
         , vcaMode(VCA_ENV)
         , filterEnvPolarity(FILTER_ENV_NORMAL)
+        , vcaLevel(0.8f)
+        , masterTune(0.0f)
+        , velocityToFilter(0.0f)
+        , velocityToAmp(1.0f)
     {}
 };
 
@@ -164,6 +186,7 @@ enum class ParamId {
     DCO_PULSE_WIDTH,
     DCO_PWM_DEPTH,
     DCO_LFO_TARGET,
+    DCO_RANGE,  // M14
 
     // Filter
     FILTER_CUTOFF,
@@ -201,9 +224,14 @@ enum class ParamId {
     VCA_MODE,
     FILTER_ENV_POLARITY,
 
+    // M14: Range & Voice Control
+    VCA_LEVEL,
+    MASTER_TUNE,
+    VELOCITY_TO_FILTER,
+    VELOCITY_TO_AMP,
+
     // Global
     MASTER_VOLUME,
-    MASTER_TUNE,
 
     PARAM_COUNT
 };

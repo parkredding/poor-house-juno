@@ -28,6 +28,7 @@ public:
     void setEnvValue(float envValue);   // 0.0 - 1.0
     void setLfoValue(float lfoValue);   // -1.0 - 1.0
     void setNoteFrequency(float noteFreq);  // For key tracking
+    void setVelocityValue(float velocity, float amount);  // M14: Velocity modulation
 
     void reset();
 
@@ -45,6 +46,8 @@ private:
     float envValue_;
     float lfoValue_;
     float noteFrequency_;
+    float velocityValue_;      // M14: Velocity value (0.0 - 1.0)
+    float velocityAmount_;     // M14: Velocity modulation amount (0.0 - 1.0)
 
     // Filter state (4 stages for 4-pole)
     float stage1_;

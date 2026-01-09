@@ -19,6 +19,10 @@ Voice::Voice()
     , glideRate_(0.0f)
     , vcaMode_(0)  // M13: Default to ENV mode
     , filterEnvPolarity_(0)  // M13: Default to Normal polarity
+    , vcaLevel_(0.8f)  // M14: Default VCA level
+    , velocityToFilter_(0.0f)  // M14: Default no velocity to filter
+    , velocityToAmp_(1.0f)  // M14: Default full velocity to amp
+    , masterTune_(0.0f)  // M14: Default to no tuning offset
 {
     dco_.setSampleRate(sampleRate_);
     filter_.setSampleRate(sampleRate_);
@@ -124,6 +128,22 @@ void Voice::setFilterEnvPolarity(int filterEnvPolarity) {
     filterEnvPolarity_ = filterEnvPolarity;
 }
 
+void Voice::setVcaLevel(float vcaLevel) {
+    // M14: Set VCA level
+    vcaLevel_ = clamp(vcaLevel, 0.0f, 1.0f);
+}
+
+void Voice::setVelocitySensitivity(float filterAmount, float ampAmount) {
+    // M14: Set velocity sensitivity amounts
+    velocityToFilter_ = clamp(filterAmount, 0.0f, 1.0f);
+    velocityToAmp_ = clamp(ampAmount, 0.0f, 1.0f);
+}
+
+void Voice::setMasterTune(float cents) {
+    // M14: Set master tune (±50 cents)
+    masterTune_ = clamp(cents, -50.0f, 50.0f);
+}
+
 Sample Voice::process() {
     // Update voice age if active
     if (isActive()) {
@@ -136,7 +156,11 @@ Sample Voice::process() {
     // M11: Calculate final frequency with pitch bend
     float pitchBendSemitones = pitchBend_ * pitchBendRange_;
     float pitchBendRatio = std::pow(2.0f, pitchBendSemitones / 12.0f);
-    float finalFreq = currentFreq_ * pitchBendRatio;
+
+    // M14: Apply master tune (in cents)
+    float masterTuneRatio = std::pow(2.0f, masterTune_ / 1200.0f);
+
+    float finalFreq = currentFreq_ * pitchBendRatio * masterTuneRatio;
 
     // Update DCO frequency
     dco_.setFrequency(finalFreq);
@@ -154,6 +178,9 @@ Sample Voice::process() {
     // Set filter envelope modulation
     filter_.setEnvValue(filterModValue);
 
+    // M14: Set filter velocity modulation
+    filter_.setVelocityValue(velocity_, velocityToFilter_);
+
     // Generate oscillator output
     Sample dcoOut = dco_.process();
 
@@ -168,8 +195,12 @@ Sample Voice::process() {
         vcaGain = ampEnvValue;
     }
 
-    // Apply VCA gain and velocity
-    Sample output = filtered * vcaGain * velocity_;
+    // M14: Apply velocity to amplitude (scaled by velocityToAmp)
+    // velocity ranges from 0-1, so we lerp between no effect (1.0) and full effect (velocity)
+    float velocityGain = 1.0f - velocityToAmp_ + (velocityToAmp_ * velocity_);
+
+    // M14: Apply VCA level, VCA gain, and velocity
+    Sample output = filtered * vcaLevel_ * vcaGain * velocityGain;
 
     return output;
 }

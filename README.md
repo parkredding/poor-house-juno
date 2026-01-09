@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M13 - Performance Controls ✅
+**Current Milestone:** M14 - Range & Voice Control ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -20,9 +20,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M11:** Critical Features I (HPF with 4 modes, Pitch Bend ±12 semitones, Portamento 0-10s)
 - [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
+- [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
 
 **Next Steps:**
-- M14: Range & Voice Control (DCO Range, VCA Level, Velocity Options)
 - M15: Polish & Optimization (Testing, Documentation, TAL Comparison)
 - M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
 
@@ -299,7 +299,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M11:** Critical Features I (HPF, Pitch Bend, Portamento)
 - [x] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
-- [ ] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Options)
+- [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
 - [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
 - [ ] **M16:** Final Refinement (Full MIDI CC, Hold, 128-Patch Banks)
 
@@ -326,11 +326,13 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - ✅ UI controls and visual feedback in web interface
 - ✅ Full DSP implementation with mod wheel scaling LFO output
 
-**M14: Range & Voice Control** (Est: 12-18 hours)
-- DCO Range selection (16'/8'/4' footage switches)
-- VCA Level control (separate from master volume)
-- Velocity sensitivity options (per-parameter amount controls)
-- Master Tune control (±50 cents)
+**M14: Range & Voice Control** ✅ (Completed)
+- ✅ DCO Range selection (16'/8'/4' footage switches) for octave shifting
+- ✅ VCA Level control (separate from master volume)
+- ✅ Velocity sensitivity options (filter and amplitude amount controls)
+- ✅ Master Tune control (±50 cents)
+- ✅ Full DSP implementation with velocity modulation
+- ✅ UI controls in web interface
 
 **M15: Polish & Optimization** (Est: 25-35 hours)
 - Unit tests for DSP components (oscillator, filter, envelopes)
@@ -346,7 +348,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - Voice allocation priority modes (low-note, high-note, last-note)
 - Final bug fixes and polish
 
-**Total Estimated Time:** 91-147 hours remaining (M13 completed)
+**Total Estimated Time:** 40-55 hours remaining (M14 completed)
 
 ## Documentation
 

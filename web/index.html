@@ -78,6 +78,16 @@
                         <span>Enabled</span>
                     </div>
                 </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="dco-range">Range (M14)</label>
+                        <select id="dco-range">
+                            <option value="0">16' (Low)</option>
+                            <option value="1" selected>8' (Normal)</option>
+                            <option value="2">4' (High)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Filter Section -->
@@ -126,9 +136,9 @@
                 </div>
             </div>
 
-            <!-- M11/M13: Performance Controls -->
+            <!-- M11/M13/M14: Performance Controls -->
             <div class="section">
-                <h2>Performance (M11/M13)</h2>
+                <h2>Performance (M11/M13/M14)</h2>
                 <div class="controls">
                     <div class="control">
                         <label for="pitch-bend-range">Pitch Bend Range (semitones)</label>
@@ -160,6 +170,28 @@
                             <option value="0">Normal (Open)</option>
                             <option value="1">Inverse (Close)</option>
                         </select>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="vca-level">VCA Level (M14)</label>
+                        <input type="range" id="vca-level" min="0" max="100" value="80" step="1">
+                        <span id="vca-level-value">80%</span>
+                    </div>
+                    <div class="control">
+                        <label for="master-tune">Master Tune (M14, cents)</label>
+                        <input type="range" id="master-tune" min="-50" max="50" value="0" step="1">
+                        <span id="master-tune-value">0</span>
+                    </div>
+                    <div class="control">
+                        <label for="velocity-to-filter">Velocity → Filter (M14)</label>
+                        <input type="range" id="velocity-to-filter" min="0" max="100" value="0" step="1">
+                        <span id="velocity-to-filter-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="velocity-to-amp">Velocity → Amp (M14)</label>
+                        <input type="range" id="velocity-to-amp" min="0" max="100" value="100" step="1">
+                        <span id="velocity-to-amp-value">100%</span>
                     </div>
                 </div>
             </div>
