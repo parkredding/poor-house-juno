@@ -69,6 +69,15 @@ void Synth::setChorusParameters(const ChorusParams& params) {
     chorus_.setMode(static_cast<Chorus::Mode>(chorusParams_.mode));
 }
 
+void Synth::setPerformanceParameters(const PerformanceParams& params) {
+    performanceParams_ = params;
+    // Update all voices with new performance parameters
+    for (int i = 0; i < NUM_VOICES; ++i) {
+        voices_[i].setPitchBend(performanceParams_.pitchBend, performanceParams_.pitchBendRange);
+        voices_[i].setPortamentoTime(performanceParams_.portamentoTime);
+    }
+}
+
 int Synth::findFreeVoice() const {
     // First pass: find an inactive voice
     for (int i = 0; i < NUM_VOICES; ++i) {
@@ -142,6 +151,14 @@ void Synth::handleNoteOff(int midiNote) {
 void Synth::allNotesOff() {
     for (int i = 0; i < NUM_VOICES; ++i) {
         voices_[i].noteOff();
+    }
+}
+
+void Synth::handlePitchBend(float pitchBend) {
+    performanceParams_.pitchBend = clamp(pitchBend, -1.0f, 1.0f);
+    // Update all voices with new pitch bend value
+    for (int i = 0; i < NUM_VOICES; ++i) {
+        voices_[i].setPitchBend(performanceParams_.pitchBend, performanceParams_.pitchBendRange);
     }
 }
 

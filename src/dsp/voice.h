@@ -33,6 +33,10 @@ public:
     // Modulation input (from shared LFO)
     void setLfoValue(float lfoValue);  // -1.0 to 1.0
 
+    // M11: Performance controls
+    void setPitchBend(float pitchBend, float pitchBendRange);  // pitchBend: -1.0 to 1.0
+    void setPortamentoTime(float portamentoTime);  // 0.0 - 10.0 seconds
+
     // Process single sample
     Sample process();
 
@@ -60,6 +64,19 @@ private:
 
     float sampleRate_;
     float lfoValue_;
+
+    // M11: Pitch bend state
+    float pitchBend_;       // -1.0 to 1.0
+    float pitchBendRange_;  // Semitones
+
+    // M11: Portamento state
+    float portamentoTime_;  // Seconds
+    int targetNote_;        // Target MIDI note for glide
+    float currentFreq_;     // Current frequency (with glide)
+    float targetFreq_;      // Target frequency
+    float glideRate_;       // Frequency change per sample
+
+    void updateGlide();     // M11: Update portamento glide
 };
 
 } // namespace phj

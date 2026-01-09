@@ -167,6 +167,12 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setFilterKeyTrack', data: mode });
     }
 
+    // M11: HPF parameter method
+    setFilterHpfMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterHpfMode', data: mode });
+    }
+
     // Filter envelope parameter methods
     setFilterEnvAttack(attack) {
         if (!this.initialized || !this.workletNode) return;
@@ -213,6 +219,17 @@ export class AudioEngine {
     setChorusMode(mode) {
         if (!this.initialized || !this.workletNode) return;
         this.workletNode.port.postMessage({ type: 'setChorusMode', data: mode });
+    }
+
+    // M11: Performance parameter methods
+    setPitchBendRange(semitones) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPitchBendRange', data: semitones });
+    }
+
+    setPortamentoTime(seconds) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPortamentoTime', data: seconds });
     }
 
     // Legacy methods (for compatibility)

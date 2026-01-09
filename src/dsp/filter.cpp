@@ -14,6 +14,8 @@ Filter::Filter()
     , stage4_(0.0f)
     , g_(0.0f)
     , k_(0.0f)
+    , hpfState_(0.0f)
+    , hpfG_(0.0f)
 {
     updateCoefficients();
 }
@@ -45,9 +47,15 @@ void Filter::reset() {
     stage2_ = 0.0f;
     stage3_ = 0.0f;
     stage4_ = 0.0f;
+    hpfState_ = 0.0f;
 }
 
 Sample Filter::process(Sample input) {
+    // M11: Apply HPF first (if enabled)
+    if (params_.hpfMode > 0) {
+        input = processHPF(input);
+    }
+
     // Apply input drive/saturation
     input *= params_.drive;
     input = saturate(input);
@@ -103,6 +111,14 @@ void Filter::updateCoefficients() {
     // k controls feedback amount (0.0 = no resonance, 4.0 = self-oscillation)
     // Map resonance parameter (0-1) to k (0-4)
     k_ = params_.resonance * 4.0f;
+
+    // M11: Calculate HPF coefficient based on mode
+    // Mode 0 = Off, 1 = 30Hz, 2 = 60Hz, 3 = 120Hz
+    if (params_.hpfMode > 0) {
+        float hpfCutoff = 30.0f * std::pow(2.0f, params_.hpfMode - 1);  // 30, 60, 120 Hz
+        float hpfWc = TWO_PI * hpfCutoff / sampleRate_;
+        hpfG_ = std::tan(hpfWc * 0.5f);
+    }
 }
 
 float Filter::calculateCutoffHz() {
@@ -164,6 +180,17 @@ float Filter::saturate(float x) {
 
     // Soft clipping
     return std::tanh(x);
+}
+
+float Filter::processHPF(float input) {
+    // M11: 1-pole high-pass filter using ZDF topology
+    // HPF(s) = s / (s + wc)
+    float v = (input - hpfState_) * hpfG_;
+    float lp = v + hpfState_;
+    hpfState_ = lp + v;
+
+    // High-pass output = input - lowpass
+    return input - lp;
 }
 
 } // namespace phj

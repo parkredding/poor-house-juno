@@ -27,11 +27,13 @@ public:
     void setAmpEnvParameters(const EnvelopeParams& params);
     void setLfoParameters(const LfoParams& params);
     void setChorusParameters(const ChorusParams& params);
+    void setPerformanceParameters(const PerformanceParams& params);  // M11
 
     // MIDI handling
     void handleNoteOn(int midiNote, float velocity = 1.0f);
     void handleNoteOff(int midiNote);
     void allNotesOff();
+    void handlePitchBend(float pitchBend);  // M11: -1.0 to 1.0
 
     // Audio processing
     Sample process();  // Mono output (stereo mixed down)
@@ -61,6 +63,7 @@ private:
     FilterParams filterParams_;
     EnvelopeParams filterEnvParams_;
     EnvelopeParams ampEnvParams_;
+    PerformanceParams performanceParams_;  // M11
 
     // Voice management helpers
     int findFreeVoice() const;

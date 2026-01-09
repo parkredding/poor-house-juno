@@ -102,6 +102,11 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setFilterKeyTrack(data);
                 break;
 
+            // M11: HPF parameter
+            case 'setFilterHpfMode':
+                synthInstance.setFilterHpfMode(data);
+                break;
+
             // Filter envelope parameters
             case 'setFilterEnvAttack':
                 synthInstance.setFilterEnvAttack(data);
@@ -139,6 +144,15 @@ class SynthProcessor extends AudioWorkletProcessor {
             // Chorus parameters
             case 'setChorusMode':
                 synthInstance.setChorusMode(data);
+                break;
+
+            // M11: Performance parameters
+            case 'setPitchBendRange':
+                synthInstance.setPitchBendRange(data);
+                break;
+
+            case 'setPortamentoTime':
+                synthInstance.setPortamentoTime(data);
                 break;
 
             // Legacy

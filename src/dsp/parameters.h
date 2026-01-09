@@ -63,6 +63,9 @@ struct FilterParams {
 
     float drive;         // 1.0 - 4.0 (internal saturation, subtle)
 
+    // M11: High-Pass Filter
+    int hpfMode;         // 0=Off, 1=Low, 2=Medium, 3=High
+
     FilterParams()
         : cutoff(0.5f)
         , resonance(0.0f)
@@ -70,6 +73,7 @@ struct FilterParams {
         , lfoAmount(0.0f)
         , keyTrack(KEY_TRACK_OFF)
         , drive(1.0f)
+        , hpfMode(0)
     {}
 };
 
@@ -113,6 +117,21 @@ struct ChorusParams {
 };
 
 /**
+ * M11: Performance parameters (Pitch Bend and Portamento)
+ */
+struct PerformanceParams {
+    float pitchBend;         // -1.0 to 1.0 (pitch bend amount)
+    float pitchBendRange;    // Semitones (default ±2)
+    float portamentoTime;    // 0.0 - 10.0 seconds (glide time)
+
+    PerformanceParams()
+        : pitchBend(0.0f)
+        , pitchBendRange(2.0f)
+        , portamentoTime(0.0f)
+    {}
+};
+
+/**
  * Parameter IDs for external control
  */
 enum class ParamId {
@@ -131,6 +150,7 @@ enum class ParamId {
     FILTER_ENV_AMOUNT,
     FILTER_LFO_AMOUNT,
     FILTER_KEY_TRACK,
+    FILTER_HPF_MODE,
 
     // Envelopes
     FILTER_ENV_ATTACK,
@@ -148,6 +168,11 @@ enum class ParamId {
 
     // Chorus
     CHORUS_MODE,
+
+    // M11: Performance
+    PITCH_BEND,
+    PITCH_BEND_RANGE,
+    PORTAMENTO_TIME,
 
     // Global
     MASTER_VOLUME,

@@ -152,6 +152,32 @@ class App {
             if (this.audioEngine) this.audioEngine.setFilterKeyTrack(value);
         });
 
+        // M11: HPF control
+        document.getElementById('filter-hpf').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setFilterHpfMode(value);
+        });
+
+        // M11: Filter LFO Amount
+        document.getElementById('filter-lfo-amount').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('filter-lfo-amount-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setFilterLfoAmount(value);
+        });
+
+        // M11: Performance controls
+        document.getElementById('pitch-bend-range').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('pitch-bend-range-value').textContent = `±${value}`;
+            if (this.audioEngine) this.audioEngine.setPitchBendRange(value);
+        });
+
+        document.getElementById('portamento-time').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('portamento-time-value').textContent = `${value.toFixed(1)}s`;
+            if (this.audioEngine) this.audioEngine.setPortamentoTime(value);
+        });
+
         // Filter envelope controls
         document.getElementById('filter-env-attack').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value) / 1000;  // Convert ms to seconds

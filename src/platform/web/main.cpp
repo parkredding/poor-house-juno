@@ -37,6 +37,7 @@ public:
         filterParams_.lfoAmount = 0.0f;
         filterParams_.keyTrack = FilterParams::KEY_TRACK_OFF;
         filterParams_.drive = 1.0f;
+        filterParams_.hpfMode = 0;  // M11: HPF off by default
         synth_.setFilterParameters(filterParams_);
 
         // Default filter envelope parameters
@@ -60,6 +61,12 @@ public:
         // Default chorus parameters (off by default)
         chorusParams_.mode = 0;  // OFF
         synth_.setChorusParameters(chorusParams_);
+
+        // M11: Default performance parameters
+        performanceParams_.pitchBend = 0.0f;
+        performanceParams_.pitchBendRange = 2.0f;
+        performanceParams_.portamentoTime = 0.0f;
+        synth_.setPerformanceParameters(performanceParams_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -80,6 +87,12 @@ public:
             synth_.handleNoteOn(data1, velocity);
         } else if (statusByte == MIDI_NOTE_OFF || (statusByte == MIDI_NOTE_ON && data2 == 0)) {
             synth_.handleNoteOff(data1);
+        } else if (statusByte == MIDI_PITCH_BEND) {
+            // M11: Pitch bend - combine data1 (LSB) and data2 (MSB) into 14-bit value
+            int bendValue = data1 | (data2 << 7);
+            // Convert from 0-16383 to -1.0 to 1.0
+            float bendNormalized = (bendValue - 8192) / 8192.0f;
+            synth_.handlePitchBend(bendNormalized);
         }
     }
 
@@ -160,6 +173,12 @@ public:
         synth_.setFilterParameters(filterParams_);
     }
 
+    // M11: HPF
+    void setFilterHpfMode(int mode) {
+        filterParams_.hpfMode = mode;
+        synth_.setFilterParameters(filterParams_);
+    }
+
     // Parameter control - Filter Envelope
     void setFilterEnvAttack(float attack) {
         filterEnvParams_.attack = attack;
@@ -208,6 +227,17 @@ public:
         synth_.setChorusParameters(chorusParams_);
     }
 
+    // M11: Performance parameters
+    void setPitchBendRange(float semitones) {
+        performanceParams_.pitchBendRange = semitones;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setPortamentoTime(float seconds) {
+        performanceParams_.portamentoTime = seconds;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
     // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
         // No-op in new architecture - use handleMidi instead
@@ -227,6 +257,7 @@ private:
     EnvelopeParams ampEnvParams_;
     LfoParams lfoParams_;
     ChorusParams chorusParams_;
+    PerformanceParams performanceParams_;  // M11
 };
 
 // Emscripten bindings
@@ -254,6 +285,7 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setFilterEnvAmount", &WebSynth::setFilterEnvAmount)
         .function("setFilterLfoAmount", &WebSynth::setFilterLfoAmount)
         .function("setFilterKeyTrack", &WebSynth::setFilterKeyTrack)
+        .function("setFilterHpfMode", &WebSynth::setFilterHpfMode)  // M11
 
         // Filter envelope parameters
         .function("setFilterEnvAttack", &WebSynth::setFilterEnvAttack)
@@ -269,6 +301,10 @@ EMSCRIPTEN_BINDINGS(synth_module) {
 
         // Chorus parameters
         .function("setChorusMode", &WebSynth::setChorusMode)
+
+        // M11: Performance parameters
+        .function("setPitchBendRange", &WebSynth::setPitchBendRange)
+        .function("setPortamentoTime", &WebSynth::setPortamentoTime)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)
