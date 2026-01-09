@@ -59,6 +59,9 @@ void Filter::reset() {
 }
 
 Sample Filter::process(Sample input) {
+    // Update coefficients to apply modulation (envelope, LFO, velocity, key tracking)
+    updateCoefficients();
+
     // M11: Apply HPF first (if enabled)
     if (params_.hpfMode > 0) {
         input = processHPF(input);
@@ -135,7 +138,7 @@ float Filter::calculateCutoffHz() {
 
     // Envelope modulation (bipolar: -1 to +1)
     // Modulates cutoff in semitones
-    float envMod = 0.0f;
+    float envMod = 1.0f;  // Initialize to 1.0 (no modulation)
     if (params_.envAmount != 0.0f) {
         // Map envelope amount to ±48 semitones (4 octaves)
         float envSemitones = params_.envAmount * 48.0f * envValue_;
@@ -175,15 +178,7 @@ float Filter::calculateCutoffHz() {
     }
 
     // Combine all modulations (multiplicative)
-    float finalCutoff = baseCutoff;
-
-    if (envMod != 0.0f) {
-        finalCutoff *= envMod;
-    }
-
-    finalCutoff *= lfoMod;
-    finalCutoff *= keyTrackMod;
-    finalCutoff *= velocityMod;
+    float finalCutoff = baseCutoff * envMod * lfoMod * keyTrackMod * velocityMod;
 
     return finalCutoff;
 }

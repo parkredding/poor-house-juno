@@ -45,14 +45,17 @@ float Lfo::process() {
     updateDelayScale();
 
     // Generate triangle wave from phase
-    // Triangle: ramps from -1 to +1 to -1
+    // Triangle: starts at 0, goes to +1, back through 0 to -1, then back to 0
     float value;
-    if (phase_ < 0.5f) {
-        // Rising: 0.0 -> 0.5 maps to -1.0 -> +1.0
-        value = -1.0f + (phase_ * 4.0f);
+    if (phase_ < 0.25f) {
+        // Rising: 0.0 -> 0.25 maps to 0.0 -> +1.0
+        value = phase_ * 4.0f;
+    } else if (phase_ < 0.75f) {
+        // Falling: 0.25 -> 0.75 maps to +1.0 -> -1.0
+        value = 2.0f - (phase_ * 4.0f);
     } else {
-        // Falling: 0.5 -> 1.0 maps to +1.0 -> -1.0
-        value = 3.0f - (phase_ * 4.0f);
+        // Rising: 0.75 -> 1.0 maps to -1.0 -> 0.0
+        value = -4.0f + (phase_ * 4.0f);
     }
 
     // Advance phase

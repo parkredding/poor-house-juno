@@ -99,15 +99,16 @@ void Envelope::updateCoefficients() {
 
 float Envelope::calculateCoefficient(float timeSeconds) {
     // Calculate coefficient for exponential curve
-    // Formula: coeff = 1 - exp(-1 / (time * sampleRate))
-    // This gives approximately 63% of the way to target per time constant
+    // Formula: coeff = 1 - exp(-4.6 / (time * sampleRate))
+    // This reaches approximately 99% of target in the specified time
 
     if (timeSeconds <= 0.0f) {
         return 1.0f;  // Instant
     }
 
     float samples = timeSeconds * sampleRate_;
-    return 1.0f - std::exp(-1.0f / samples);
+    // Use 4.6 time constants to reach 99% in the specified time
+    return 1.0f - std::exp(-4.6f / samples);
 }
 
 } // namespace phj
