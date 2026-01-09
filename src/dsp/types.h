@@ -17,6 +17,7 @@ constexpr int MAX_BUFFER_SIZE = 512;
 // MIDI constants
 constexpr int MIDI_NOTE_ON = 0x90;
 constexpr int MIDI_NOTE_OFF = 0x80;
+constexpr int MIDI_CONTROL_CHANGE = 0xB0;
 constexpr int MIDI_CC = 0xB0;
 
 // Voice constants

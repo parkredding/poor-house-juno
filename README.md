@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M9 - Web Interface Polish ✅
+**Current Milestone:** M10 - Pi Integration and Optimization ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -16,9 +16,10 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M7:** Polyphony (6 voices with voice stealing)
 - [x] **M8:** Chorus (BBD stereo chorus with modes I, II, and I+II)
 - [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators, improved visualization)
+- [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, real-time audio thread)
 
 **Next Steps:**
-- M10+: Pi Integration and Optimization
+- M11: Final Polish and Reference Matching
 
 ## Overview
 
@@ -143,14 +144,24 @@ make pi
 # Run with default audio/MIDI devices
 ./build-pi/poor-house-juno
 
-# Specify devices
+# Specify devices (optional)
 ./build-pi/poor-house-juno --audio hw:1,0 --midi hw:1,0
 ```
 
-**Current behavior (M1):**
-- Plays a 440 Hz sine wave for 3 seconds on startup (if no MIDI available)
-- Responds to MIDI Note On/Off messages
+**Features (M10):**
+- Full 6-voice polyphonic Juno-106 emulation
+- BBD stereo chorus effect (modes I, II, and I+II)
+- Real-time MIDI input with velocity sensitivity
+- CPU usage monitoring (displayed every 5 seconds)
+- Real-time audio thread priority for low latency
+- Auto-test chord on startup if no MIDI device available
 - Press Ctrl+C to exit
+
+**Performance:**
+- Target: <50% CPU usage on Raspberry Pi 4
+- Real-time audio thread (SCHED_FIFO priority 80)
+- ~2.7ms latency at 48kHz with 128-sample buffer
+- Optimized DSP processing with SIMD where applicable
 
 ## Development Workflow
 
@@ -279,7 +290,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M7:** Polyphony (6 voices with voice stealing)
 - [x] **M8:** Chorus (BBD emulation)
 - [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators)
-- [ ] **M10:** Pi Integration and Optimization
+- [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, RT audio)
 - [ ] **M11:** Final Polish and Reference Matching
 
 ## Documentation
