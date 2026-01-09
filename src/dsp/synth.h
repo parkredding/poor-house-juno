@@ -10,9 +10,8 @@ namespace phj {
 /**
  * Synth - Main synthesizer engine
  *
- * Manages voice(s), LFO, and global parameters.
- * M6: Single voice operation
- * M7: Will be extended to 6-voice polyphony
+ * Manages 6-voice polyphony, LFO, and global parameters.
+ * M7: 6-voice polyphony with voice stealing
  */
 class Synth {
 public:
@@ -46,14 +45,18 @@ private:
     Lfo lfo_;
     LfoParams lfoParams_;
 
-    // Voice (single voice for M6, will expand to array in M7)
-    Voice voice_;
+    // 6 voices for polyphony
+    Voice voices_[NUM_VOICES];
 
     // Current parameters
     DcoParams dcoParams_;
     FilterParams filterParams_;
     EnvelopeParams filterEnvParams_;
     EnvelopeParams ampEnvParams_;
+
+    // Voice management helpers
+    int findFreeVoice() const;
+    int findVoiceToSteal() const;
 };
 
 } // namespace phj
