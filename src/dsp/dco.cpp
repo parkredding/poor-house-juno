@@ -66,8 +66,14 @@ void Dco::reset() {
 }
 
 Sample Dco::process() {
-    // Update pitch drift
+    // Update pitch drift and phase increments
     updateDrift();
+
+    // Always update phase increments to apply LFO modulation
+    // (updateDrift only calls this if drift is enabled)
+    if (!params_.enableDrift) {
+        updatePhaseIncrements();
+    }
 
     // Calculate current pulse width (with LFO modulation if enabled)
     float pulseWidth = params_.pulseWidth;
