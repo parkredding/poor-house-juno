@@ -1,6 +1,7 @@
 #include "audio_driver.h"
 #include <iostream>
 #include <cstring>
+#include <sched.h>
 
 namespace phj {
 
@@ -116,6 +117,18 @@ void AudioDriver::stop() {
 
 void* AudioDriver::audioThreadFunc(void* arg) {
     AudioDriver* driver = static_cast<AudioDriver*>(arg);
+
+    // Set real-time priority for audio thread
+    struct sched_param param;
+    param.sched_priority = 80;  // High priority (1-99, higher is more important)
+    int result = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+    if (result != 0) {
+        std::cerr << "Warning: Could not set real-time priority for audio thread (run as root or adjust system limits)" << std::endl;
+        // Continue anyway - will run at normal priority
+    } else {
+        std::cout << "Audio thread running at real-time priority (SCHED_FIFO, priority 80)" << std::endl;
+    }
+
     driver->runAudioLoop();
     return nullptr;
 }
