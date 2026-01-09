@@ -19,6 +19,10 @@ export class AudioEngine {
 
         console.log('AudioContext created:', this.audioContext.sampleRate, 'Hz');
 
+        // Resume audio context (required by browsers for user-initiated audio)
+        await this.audioContext.resume();
+        console.log('AudioContext resumed, state:', this.audioContext.state);
+
         // Load and register AudioWorklet
         try {
             await this.audioContext.audioWorklet.addModule('audio_worklet.js');
