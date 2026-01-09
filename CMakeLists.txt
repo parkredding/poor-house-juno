@@ -63,12 +63,12 @@ if(PLATFORM STREQUAL "web")
             -s WASM=1 \
             -s EXPORT_ES6=1 \
             -s MODULARIZE=1 \
-            -s EXPORT_NAME='createSynthProcessor' \
-            -s EXPORTED_FUNCTIONS=['_malloc','_free'] \
-            -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap'] \
+            -s EXPORT_NAME=createSynthProcessor \
+            -s EXPORTED_FUNCTIONS=[_malloc,_free] \
+            -s EXPORTED_RUNTIME_METHODS=[ccall,cwrap] \
             -s ALLOW_MEMORY_GROWTH=1 \
             -s INITIAL_MEMORY=16777216 \
-            -s ENVIRONMENT='web,worker' \
+            -s ENVIRONMENT=web,worker \
             --no-entry \
             -lembind \
         "
