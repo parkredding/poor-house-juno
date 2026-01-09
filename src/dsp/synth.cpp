@@ -77,6 +77,9 @@ void Synth::setPerformanceParameters(const PerformanceParams& params) {
     for (int i = 0; i < NUM_VOICES; ++i) {
         voices_[i].setPitchBend(performanceParams_.pitchBend, performanceParams_.pitchBendRange);
         voices_[i].setPortamentoTime(performanceParams_.portamentoTime);
+        // M13: Update VCA mode and filter envelope polarity
+        voices_[i].setVcaMode(performanceParams_.vcaMode);
+        voices_[i].setFilterEnvPolarity(performanceParams_.filterEnvPolarity);
     }
 }
 
@@ -166,16 +169,24 @@ void Synth::handlePitchBend(float pitchBend) {
     }
 }
 
+void Synth::handleModWheel(float modWheel) {
+    // M13: Modulation wheel controls LFO depth (MIDI CC #1)
+    performanceParams_.modWheel = clamp(modWheel, 0.0f, 1.0f);
+}
+
 void Synth::processStereo(Sample& leftOut, Sample& rightOut) {
     // Update global LFO (shared by all voices)
     float lfoValue = lfo_.process();
+
+    // M13: Scale LFO by modulation wheel (0.0 - 1.0)
+    float modulatedLfo = lfoValue * performanceParams_.modWheel;
 
     // Mix all voices
     Sample mixedVoices = 0.0f;
 
     for (int i = 0; i < NUM_VOICES; ++i) {
-        // Update voice with LFO value
-        voices_[i].setLfoValue(lfoValue);
+        // Update voice with LFO value (scaled by mod wheel)
+        voices_[i].setLfoValue(modulatedLfo);
 
         // Process and accumulate
         mixedVoices += voices_[i].process();

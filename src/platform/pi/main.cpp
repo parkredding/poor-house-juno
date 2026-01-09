@@ -102,7 +102,13 @@ void midiCallback(const uint8_t* data, int length, void* userData) {
         uint8_t controller = data[1];
         uint8_t value = data[2];
         std::cout << "MIDI CC: " << (int)controller << " = " << (int)value << std::endl;
-        // CC handling can be expanded in the future for real-time parameter control
+
+        // M13: Handle modulation wheel (CC #1)
+        if (controller == 1) {
+            float normalizedValue = value / 127.0f;
+            synth->handleModWheel(normalizedValue);
+            std::cout << "Mod Wheel: " << normalizedValue << std::endl;
+        }
     } else if (status == MIDI_PITCH_BEND && length >= 3) {
         // M11: Pitch bend - combine data[1] (LSB) and data[2] (MSB) into 14-bit value
         int bendValue = data[1] | (data[2] << 7);

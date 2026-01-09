@@ -63,7 +63,9 @@ export class PresetManager {
             ampEnvDecay: 0.3,
             ampEnvSustain: 0.8,
             ampEnvRelease: 0.3,
-            chorusMode: 0
+            chorusMode: 0,
+            vcaMode: 0,  // M13: ENV mode
+            filterEnvPolarity: 0  // M13: Normal polarity
         };
     }
 
@@ -92,7 +94,9 @@ export class PresetManager {
             ampEnvDecay: 0.5,
             ampEnvSustain: 0.7,
             ampEnvRelease: 0.4,
-            chorusMode: 2
+            chorusMode: 2,
+            vcaMode: 0,  // M13: ENV mode
+            filterEnvPolarity: 0  // M13: Normal polarity
         };
     }
 
@@ -121,7 +125,9 @@ export class PresetManager {
             ampEnvDecay: 0.3,
             ampEnvSustain: 0.9,
             ampEnvRelease: 0.1,
-            chorusMode: 0
+            chorusMode: 0,
+            vcaMode: 0,  // M13: ENV mode
+            filterEnvPolarity: 0  // M13: Normal polarity
         };
     }
 
@@ -150,7 +156,9 @@ export class PresetManager {
             ampEnvDecay: 1.0,
             ampEnvSustain: 0.9,
             ampEnvRelease: 2.0,
-            chorusMode: 3
+            chorusMode: 3,
+            vcaMode: 0,  // M13: ENV mode
+            filterEnvPolarity: 0  // M13: Normal polarity
         };
     }
 
@@ -179,7 +187,9 @@ export class PresetManager {
             ampEnvDecay: 0.1,
             ampEnvSustain: 1.0,
             ampEnvRelease: 0.1,
-            chorusMode: 1
+            chorusMode: 1,
+            vcaMode: 0,  // M13: ENV mode
+            filterEnvPolarity: 0  // M13: Normal polarity
         };
     }
 
@@ -252,6 +262,10 @@ export class PresetManager {
 
         // Chorus
         params.chorusMode = parseInt(document.getElementById('chorus-mode').value);
+
+        // M13: Performance parameters (VCA mode and Filter Env Polarity are preset parameters)
+        params.vcaMode = parseInt(document.getElementById('vca-mode').value);
+        params.filterEnvPolarity = parseInt(document.getElementById('filter-env-polarity').value);
 
         this.currentParameters = params;
         return params;
@@ -331,6 +345,14 @@ export class PresetManager {
 
         // Chorus
         document.getElementById('chorus-mode').value = parameters.chorusMode;
+
+        // M13: Performance parameters (if present in preset, use defaults otherwise)
+        if (parameters.vcaMode !== undefined) {
+            document.getElementById('vca-mode').value = parameters.vcaMode;
+        }
+        if (parameters.filterEnvPolarity !== undefined) {
+            document.getElementById('filter-env-polarity').value = parameters.filterEnvPolarity;
+        }
 
         return parameters;
     }

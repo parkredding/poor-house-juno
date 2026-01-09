@@ -185,6 +185,23 @@ class App {
             if (this.audioEngine) this.audioEngine.setPortamentoTime(value);
         });
 
+        // M13: Performance controls
+        document.getElementById('mod-wheel').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('mod-wheel-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setModWheel(value);
+        });
+
+        document.getElementById('vca-mode').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setVcaMode(value);
+        });
+
+        document.getElementById('filter-env-polarity').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setFilterEnvPolarity(value);
+        });
+
         // Filter envelope controls
         document.getElementById('filter-env-attack').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value) / 1000;  // Convert ms to seconds

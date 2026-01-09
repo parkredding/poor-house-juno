@@ -159,6 +159,19 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setPortamentoTime(data);
                 break;
 
+            // M13: Performance parameters
+            case 'setModWheel':
+                synthInstance.setModWheel(data);
+                break;
+
+            case 'setVcaMode':
+                synthInstance.setVcaMode(data);
+                break;
+
+            case 'setFilterEnvPolarity':
+                synthInstance.setFilterEnvPolarity(data);
+                break;
+
             // Legacy
             case 'setFrequency':
                 synthInstance.setFrequency(data);

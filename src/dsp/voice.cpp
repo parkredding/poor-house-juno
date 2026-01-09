@@ -17,6 +17,8 @@ Voice::Voice()
     , currentFreq_(440.0f)
     , targetFreq_(440.0f)
     , glideRate_(0.0f)
+    , vcaMode_(0)  // M13: Default to ENV mode
+    , filterEnvPolarity_(0)  // M13: Default to Normal polarity
 {
     dco_.setSampleRate(sampleRate_);
     filter_.setSampleRate(sampleRate_);
@@ -112,6 +114,16 @@ void Voice::setPortamentoTime(float portamentoTime) {
     portamentoTime_ = clamp(portamentoTime, 0.0f, 10.0f);
 }
 
+void Voice::setVcaMode(int vcaMode) {
+    // M13: Set VCA mode (0=ENV, 1=GATE)
+    vcaMode_ = vcaMode;
+}
+
+void Voice::setFilterEnvPolarity(int filterEnvPolarity) {
+    // M13: Set filter envelope polarity (0=Normal, 1=Inverse)
+    filterEnvPolarity_ = filterEnvPolarity;
+}
+
 Sample Voice::process() {
     // Update voice age if active
     if (isActive()) {
@@ -133,8 +145,14 @@ Sample Voice::process() {
     float filterEnvValue = filterEnv_.process();
     float ampEnvValue = ampEnv_.process();
 
+    // M13: Apply filter envelope polarity
+    float filterModValue = filterEnvValue;
+    if (filterEnvPolarity_ == 1) {  // Inverse mode
+        filterModValue = 1.0f - filterEnvValue;
+    }
+
     // Set filter envelope modulation
-    filter_.setEnvValue(filterEnvValue);
+    filter_.setEnvValue(filterModValue);
 
     // Generate oscillator output
     Sample dcoOut = dco_.process();
@@ -142,8 +160,16 @@ Sample Voice::process() {
     // Process through filter
     Sample filtered = filter_.process(dcoOut);
 
-    // Apply amplitude envelope and velocity
-    Sample output = filtered * ampEnvValue * velocity_;
+    // M13: Apply VCA mode (ENV or GATE)
+    float vcaGain;
+    if (vcaMode_ == 1) {  // GATE mode: instant on/off
+        vcaGain = noteActive_ ? 1.0f : 0.0f;
+    } else {  // ENV mode (default): use amplitude envelope
+        vcaGain = ampEnvValue;
+    }
+
+    // Apply VCA gain and velocity
+    Sample output = filtered * vcaGain * velocity_;
 
     return output;
 }

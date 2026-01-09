@@ -63,10 +63,13 @@ public:
         chorusParams_.mode = 0;  // OFF
         synth_.setChorusParameters(chorusParams_);
 
-        // M11: Default performance parameters
+        // M11/M13: Default performance parameters
         performanceParams_.pitchBend = 0.0f;
         performanceParams_.pitchBendRange = 2.0f;
         performanceParams_.portamentoTime = 0.0f;
+        performanceParams_.modWheel = 1.0f;  // M13: Default to full modulation
+        performanceParams_.vcaMode = PerformanceParams::VCA_ENV;  // M13: Default to envelope mode
+        performanceParams_.filterEnvPolarity = PerformanceParams::FILTER_ENV_NORMAL;  // M13: Default to normal
         synth_.setPerformanceParameters(performanceParams_);
     }
 
@@ -94,6 +97,12 @@ public:
             // Convert from 0-16383 to -1.0 to 1.0
             float bendNormalized = (bendValue - 8192) / 8192.0f;
             synth_.handlePitchBend(bendNormalized);
+        } else if (statusByte == MIDI_CONTROL_CHANGE) {
+            // M13: Handle MIDI CC messages
+            if (data1 == 1) {  // CC #1: Modulation Wheel
+                float modWheelValue = data2 / 127.0f;
+                synth_.handleModWheel(modWheelValue);
+            }
         }
     }
 
@@ -244,6 +253,22 @@ public:
         synth_.setPerformanceParameters(performanceParams_);
     }
 
+    // M13: Performance parameters
+    void setModWheel(float value) {
+        performanceParams_.modWheel = value;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setVcaMode(int mode) {
+        performanceParams_.vcaMode = mode;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setFilterEnvPolarity(int polarity) {
+        performanceParams_.filterEnvPolarity = polarity;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
     // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
         // No-op in new architecture - use handleMidi instead
@@ -312,6 +337,11 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         // M11: Performance parameters
         .function("setPitchBendRange", &WebSynth::setPitchBendRange)
         .function("setPortamentoTime", &WebSynth::setPortamentoTime)
+
+        // M13: Performance parameters
+        .function("setModWheel", &WebSynth::setModWheel)
+        .function("setVcaMode", &WebSynth::setVcaMode)
+        .function("setFilterEnvPolarity", &WebSynth::setFilterEnvPolarity)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)
