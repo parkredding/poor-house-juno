@@ -16,6 +16,7 @@ Synth::Synth()
 
     // Set default LFO parameters
     lfo_.setRate(lfoParams_.rate);
+    lfo_.setDelay(lfoParams_.delay);  // M12
 
     // Set default chorus mode
     chorus_.setMode(static_cast<Chorus::Mode>(chorusParams_.mode));
@@ -62,6 +63,7 @@ void Synth::setAmpEnvParameters(const EnvelopeParams& params) {
 void Synth::setLfoParameters(const LfoParams& params) {
     lfoParams_ = params;
     lfo_.setRate(lfoParams_.rate);
+    lfo_.setDelay(lfoParams_.delay);  // M12
 }
 
 void Synth::setChorusParameters(const ChorusParams& params) {
@@ -136,6 +138,8 @@ void Synth::handleNoteOn(int midiNote, float velocity) {
     // If we found a voice, trigger it
     if (voiceIndex != -1) {
         voices_[voiceIndex].noteOn(midiNote, velocity);
+        // M12: Trigger LFO delay timer on note-on
+        lfo_.trigger();
     }
 }
 

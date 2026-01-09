@@ -117,6 +117,13 @@ class App {
             if (this.audioEngine) this.audioEngine.setLfoRate(value);
         });
 
+        // M12: LFO Delay control
+        document.getElementById('lfo-delay').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('lfo-delay-value').textContent = `${value.toFixed(1)}s`;
+            if (this.audioEngine) this.audioEngine.setLfoDelay(value);
+        });
+
         document.getElementById('lfo-target').addEventListener('change', (e) => {
             const value = parseInt(e.target.value);
             if (this.audioEngine) this.audioEngine.setLfoTarget(value);
@@ -520,6 +527,7 @@ class App {
 
         // LFO
         this.audioEngine.setLfoRate(params.lfoRate);
+        this.audioEngine.setLfoDelay(params.lfoDelay || 0.0);
         this.audioEngine.setLfoTarget(params.lfoTarget);
 
         // Filter

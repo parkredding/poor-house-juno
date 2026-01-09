@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M11 - Critical Features I ✅
+**Current Milestone:** M12 - Critical Features II ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -18,9 +18,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators, improved visualization)
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, real-time audio thread)
 - [x] **M11:** Critical Features I (HPF with 4 modes, Pitch Bend ±12 semitones, Portamento 0-10s)
+- [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
 
 **Next Steps:**
-- M12: Critical Features II (LFO Delay, Filter LFO Modulation UI enhancements)
 - M13: Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - M14: Range & Voice Control (DCO Range, VCA Level, Velocity Options)
 - M15: Polish & Optimization (Testing, Documentation, TAL Comparison)
@@ -297,7 +297,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators)
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, RT audio)
 - [x] **M11:** Critical Features I (HPF, Pitch Bend, Portamento)
-- [ ] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
+- [x] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
 - [ ] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - [ ] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Options)
 - [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
@@ -312,10 +312,12 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - ✅ Web UI controls for all new features (HPF, pitch bend range, portamento time)
 - ✅ MIDI pitch bend handling (both Pi and Web platforms)
 
-**M12: Critical Features II** (Est: 10-15 hours)
-- LFO Delay implementation (0-3 second delay before modulation)
-- Expose Filter LFO Modulation in web UI (parameter exists in DSP)
-- MIDI CC handlers for new parameters
+**M12: Critical Features II** ✅ (Completed)
+- ✅ LFO Delay implementation (0-3 second delay before modulation starts)
+- ✅ Filter LFO Modulation control exposed in web UI
+- ✅ LFO Delay control in web UI with 0-3 second range
+- ✅ Full DSP implementation with fade-in during delay period
+- ✅ Delay timer triggered on note-on events
 
 **M13: Performance Controls** (Est: 15-20 hours)
 - Modulation Wheel (MIDI CC #1) for real-time LFO depth control
@@ -343,7 +345,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - Voice allocation priority modes (low-note, high-note, last-note)
 - Final bug fixes and polish
 
-**Total Estimated Time:** 97-138 hours remaining
+**Total Estimated Time:** 77-113 hours remaining (M12 completed)
 
 ## Documentation
 

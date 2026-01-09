@@ -99,9 +99,11 @@ struct EnvelopeParams {
  */
 struct LfoParams {
     float rate;      // 0.1 - 30.0 Hz
+    float delay;     // 0.0 - 3.0 seconds (M12: delay before modulation starts)
 
     LfoParams()
         : rate(2.0f)
+        , delay(0.0f)
     {}
 };
 
@@ -165,6 +167,7 @@ enum class ParamId {
 
     // LFO
     LFO_RATE,
+    LFO_DELAY,
 
     // Chorus
     CHORUS_MODE,

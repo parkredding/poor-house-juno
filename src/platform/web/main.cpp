@@ -56,6 +56,7 @@ public:
 
         // Default LFO parameters
         lfoParams_.rate = 2.0f;
+        lfoParams_.delay = 0.0f;  // M12
         synth_.setLfoParameters(lfoParams_);
 
         // Default chorus parameters (off by default)
@@ -134,6 +135,11 @@ public:
 
     void setLfoRate(float rate) {
         lfoParams_.rate = rate;
+        synth_.setLfoParameters(lfoParams_);
+    }
+
+    void setLfoDelay(float delay) {
+        lfoParams_.delay = delay;
         synth_.setLfoParameters(lfoParams_);
     }
 
@@ -276,6 +282,7 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setPwmDepth", &WebSynth::setPwmDepth)
         .function("setLfoTarget", &WebSynth::setLfoTarget)
         .function("setLfoRate", &WebSynth::setLfoRate)
+        .function("setLfoDelay", &WebSynth::setLfoDelay)
         .function("setDetune", &WebSynth::setDetune)
         .function("setDriftEnabled", &WebSynth::setDriftEnabled)
 

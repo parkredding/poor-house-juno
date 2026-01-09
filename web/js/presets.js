@@ -49,6 +49,7 @@ export class PresetManager {
             detune: 0,
             driftEnabled: true,
             lfoRate: 2.0,
+            lfoDelay: 0.0,
             lfoTarget: 0,
             filterCutoff: 0.8,
             filterResonance: 0,
@@ -77,6 +78,7 @@ export class PresetManager {
             detune: 0,
             driftEnabled: true,
             lfoRate: 4.5,
+            lfoDelay: 0.0,
             lfoTarget: 2,
             filterCutoff: 0.65,
             filterResonance: 0.4,
@@ -105,6 +107,7 @@ export class PresetManager {
             detune: 0,
             driftEnabled: true,
             lfoRate: 0.5,
+            lfoDelay: 0.0,
             lfoTarget: 0,
             filterCutoff: 0.4,
             filterResonance: 0.6,
@@ -133,6 +136,7 @@ export class PresetManager {
             detune: 3.0,
             driftEnabled: true,
             lfoRate: 0.3,
+            lfoDelay: 0.0,
             lfoTarget: 2,
             filterCutoff: 0.7,
             filterResonance: 0.3,
@@ -161,6 +165,7 @@ export class PresetManager {
             detune: 0,
             driftEnabled: true,
             lfoRate: 5.0,
+            lfoDelay: 0.0,
             lfoTarget: 1,
             filterCutoff: 0.75,
             filterResonance: 0.5,
@@ -224,6 +229,7 @@ export class PresetManager {
 
         // LFO
         params.lfoRate = parseFloat(document.getElementById('lfo-rate').value);
+        params.lfoDelay = parseFloat(document.getElementById('lfo-delay').value);
         params.lfoTarget = parseInt(document.getElementById('lfo-target').value);
 
         // Filter
@@ -279,6 +285,9 @@ export class PresetManager {
         // LFO
         document.getElementById('lfo-rate').value = parameters.lfoRate;
         document.getElementById('lfo-rate-value').textContent = `${parameters.lfoRate.toFixed(1)} Hz`;
+
+        document.getElementById('lfo-delay').value = parameters.lfoDelay || 0.0;
+        document.getElementById('lfo-delay-value').textContent = `${(parameters.lfoDelay || 0.0).toFixed(1)}s`;
 
         document.getElementById('lfo-target').value = parameters.lfoTarget;
 

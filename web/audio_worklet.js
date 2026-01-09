@@ -73,6 +73,10 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setLfoRate(data);
                 break;
 
+            case 'setLfoDelay':
+                synthInstance.setLfoDelay(data);
+                break;
+
             case 'setDetune':
                 synthInstance.setDetune(data);
                 break;
