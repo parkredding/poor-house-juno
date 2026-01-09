@@ -103,6 +103,13 @@ void midiCallback(const uint8_t* data, int length, void* userData) {
         uint8_t value = data[2];
         std::cout << "MIDI CC: " << (int)controller << " = " << (int)value << std::endl;
         // CC handling can be expanded in the future for real-time parameter control
+    } else if (status == MIDI_PITCH_BEND && length >= 3) {
+        // M11: Pitch bend - combine data[1] (LSB) and data[2] (MSB) into 14-bit value
+        int bendValue = data[1] | (data[2] << 7);
+        // Convert from 0-16383 to -1.0 to 1.0
+        float bendNormalized = (bendValue - 8192) / 8192.0f;
+        synth->handlePitchBend(bendNormalized);
+        std::cout << "Pitch Bend: " << bendNormalized << std::endl;
     }
 }
 
@@ -129,6 +136,7 @@ void initializeDefaultParameters(Synth& synth) {
     filterParams.lfoAmount = 0.0f;
     filterParams.keyTrack = FilterParams::KEY_TRACK_HALF;
     filterParams.drive = 1.0f;
+    filterParams.hpfMode = 0;  // M11: HPF off by default
     synth.setFilterParameters(filterParams);
 
     // Filter envelope - punchy but smooth
@@ -150,18 +158,19 @@ void initializeDefaultParameters(Synth& synth) {
     // LFO parameters - moderate rate
     LfoParams lfoParams;
     lfoParams.rate = 3.0f;  // 3 Hz
-    lfoParams.amount = 0.0f;
-    lfoParams.target = LfoParams::LFO_OFF;
     synth.setLfoParameters(lfoParams);
 
     // Chorus parameters - classic Juno chorus mode II
     ChorusParams chorusParams;
-    chorusParams.mode = ChorusParams::MODE_II;
-    chorusParams.rate = 0.6f;
-    chorusParams.depth = 0.5f;
-    chorusParams.feedback = 0.3f;
-    chorusParams.mix = 0.5f;
+    chorusParams.mode = 2;  // Mode II
     synth.setChorusParameters(chorusParams);
+
+    // M11: Performance parameters - defaults
+    PerformanceParams performanceParams;
+    performanceParams.pitchBend = 0.0f;
+    performanceParams.pitchBendRange = 2.0f;  // ±2 semitones
+    performanceParams.portamentoTime = 0.0f;  // Off by default
+    synth.setPerformanceParameters(performanceParams);
 }
 
 int main(int argc, char** argv) {
@@ -212,7 +221,8 @@ int main(int argc, char** argv) {
     std::cout << "\nFeatures:" << std::endl;
     std::cout << "  - 6-voice polyphony with voice stealing" << std::endl;
     std::cout << "  - BBD stereo chorus effect" << std::endl;
-    std::cout << "  - Full MIDI support (Note On/Off, velocity)" << std::endl;
+    std::cout << "  - Full MIDI support (Note On/Off, velocity, pitch bend)" << std::endl;
+    std::cout << "  - M11: HPF, Pitch Bend (±2 semitones), Portamento" << std::endl;
     std::cout << "\nReady for MIDI input. Press Ctrl+C to exit.\n" << std::endl;
 
     // Test: play a chord for a few seconds if no MIDI

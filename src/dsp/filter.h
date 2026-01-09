@@ -56,10 +56,15 @@ private:
     float g_;           // Cutoff coefficient
     float k_;           // Resonance coefficient
 
+    // M11: HPF state (1-pole high-pass filter)
+    float hpfState_;
+    float hpfG_;        // HPF cutoff coefficient
+
     // Helper methods
     void updateCoefficients();
     float calculateCutoffHz();
     float saturate(float x);  // Soft saturation
+    float processHPF(float input);  // M11: High-pass filter processing
 };
 
 } // namespace phj

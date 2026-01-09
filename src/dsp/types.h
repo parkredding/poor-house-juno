@@ -19,6 +19,7 @@ constexpr int MIDI_NOTE_ON = 0x90;
 constexpr int MIDI_NOTE_OFF = 0x80;
 constexpr int MIDI_CONTROL_CHANGE = 0xB0;
 constexpr int MIDI_CC = 0xB0;
+constexpr int MIDI_PITCH_BEND = 0xE0;  // M11
 
 // Voice constants
 constexpr int NUM_VOICES = 6;
