@@ -4,18 +4,21 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M1 - Project Setup ✅
-- [x] Repository structure
-- [x] Build system (CMake for Pi and Web)
-- [x] Basic web audio worklet running
-- [x] "Hello sine wave" on both platforms
+**Current Milestone:** M5 - LFO ✅
+
+**Completed Milestones:**
+- [x] **M1:** Project Setup (repository, build system, basic audio)
+- [x] **M2:** Oscillator (DCO with polyBLEP, PWM, sub-oscillator, noise)
+- [x] **M3:** Filter (IR3109 4-pole ladder with envelope modulation)
+- [x] **M4:** Envelopes (Filter and Amplitude ADSR)
+- [x] **M5:** LFO (Triangle wave modulation for pitch and PWM)
 
 **Next Steps:**
-- M2: Oscillator (DCO with polyBLEP, PWM, sub-oscillator)
-- M3: Filter (IR3109 ladder emulation)
-- M4: Envelopes (ADSR)
-- M5: LFO
-- M6+: Full voice architecture and beyond
+- M6: Single Voice Integration
+- M7: Polyphony (6 voices)
+- M8: Chorus (BBD emulation)
+- M9: Web Interface Polish
+- M10+: Pi Integration and Optimization
 
 ## Overview
 
@@ -112,11 +115,15 @@ make pi
 
 ### Web Interface
 
+**Option 1: GitHub Pages (Live Demo)**
+- Visit the live demo at: https://parkredding.github.io/poor-house-juno/ (auto-deployed from main branch)
+
+**Option 2: Local Development**
 1. Build and serve the web version (see above)
 2. Open http://localhost:8000 in a modern browser (Chrome/Edge recommended for best Web Audio support)
 3. Click **"Start Audio"** to initialize the audio engine
-4. Use the controls to adjust frequency and amplitude
-5. Click **"Play A4"** to test a 440 Hz sine wave
+4. Use the controls to adjust all synth parameters
+5. Click **"Play A4"** to test a 440 Hz note
 6. Connect a MIDI controller for live playback (requires Web MIDI support)
 
 **Features:**
@@ -228,10 +235,10 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 
 **Milestones:**
 - [x] **M1:** Project Setup
-- [ ] **M2:** Oscillator (DCO with polyBLEP)
-- [ ] **M3:** Filter (IR3109 ladder)
-- [ ] **M4:** Envelopes (ADSR)
-- [ ] **M5:** LFO
+- [x] **M2:** Oscillator (DCO with polyBLEP)
+- [x] **M3:** Filter (IR3109 ladder)
+- [x] **M4:** Envelopes (ADSR)
+- [x] **M5:** LFO
 - [ ] **M6:** Single Voice Integration
 - [ ] **M7:** Polyphony (6 voices)
 - [ ] **M8:** Chorus (BBD emulation)
