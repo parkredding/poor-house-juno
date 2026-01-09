@@ -80,6 +80,10 @@ void Synth::setPerformanceParameters(const PerformanceParams& params) {
         // M13: Update VCA mode and filter envelope polarity
         voices_[i].setVcaMode(performanceParams_.vcaMode);
         voices_[i].setFilterEnvPolarity(performanceParams_.filterEnvPolarity);
+        // M14: Update VCA level, velocity sensitivity, and master tune
+        voices_[i].setVcaLevel(performanceParams_.vcaLevel);
+        voices_[i].setVelocitySensitivity(performanceParams_.velocityToFilter, performanceParams_.velocityToAmp);
+        voices_[i].setMasterTune(performanceParams_.masterTune);
     }
 }
 

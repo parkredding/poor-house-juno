@@ -105,6 +105,20 @@ void Dco::process(Sample* output, int numSamples) {
 }
 
 void Dco::updatePhaseIncrements() {
+    // M14: Apply range/octave shift
+    float rangeFactor = 1.0f;
+    switch (params_.range) {
+        case DcoParams::RANGE_16:
+            rangeFactor = 0.5f;  // 16' = down 1 octave
+            break;
+        case DcoParams::RANGE_8:
+            rangeFactor = 1.0f;  // 8' = normal pitch
+            break;
+        case DcoParams::RANGE_4:
+            rangeFactor = 2.0f;  // 4' = up 1 octave
+            break;
+    }
+
     // Calculate total frequency with detune, drift, and LFO
     float detuneFactor = std::pow(2.0f, params_.detune / 1200.0f);
     float driftFactor = std::pow(2.0f, driftAmount_ / 1200.0f);
@@ -116,7 +130,7 @@ void Dco::updatePhaseIncrements() {
         pitchMod = std::pow(2.0f, lfoValue_ / 12.0f);
     }
 
-    currentFrequency_ = baseFrequency_ * detuneFactor * driftFactor * pitchMod;
+    currentFrequency_ = baseFrequency_ * rangeFactor * detuneFactor * driftFactor * pitchMod;
 
     // Calculate phase increments
     mainPhaseInc_ = currentFrequency_ / sampleRate_;

@@ -110,6 +110,12 @@ class App {
             if (this.audioEngine) this.audioEngine.setDriftEnabled(e.target.checked);
         });
 
+        // M14: DCO Range control
+        document.getElementById('dco-range').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setDcoRange(value);
+        });
+
         // LFO controls
         document.getElementById('lfo-rate').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
@@ -200,6 +206,31 @@ class App {
         document.getElementById('filter-env-polarity').addEventListener('change', (e) => {
             const value = parseInt(e.target.value);
             if (this.audioEngine) this.audioEngine.setFilterEnvPolarity(value);
+        });
+
+        // M14: Range & Voice Control
+        document.getElementById('vca-level').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('vca-level-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setVcaLevel(value);
+        });
+
+        document.getElementById('master-tune').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('master-tune-value').textContent = `${value}`;
+            if (this.audioEngine) this.audioEngine.setMasterTune(value);
+        });
+
+        document.getElementById('velocity-to-filter').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('velocity-to-filter-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setVelocityToFilter(value);
+        });
+
+        document.getElementById('velocity-to-amp').addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value) / 100;
+            document.getElementById('velocity-to-amp-value').textContent = `${e.target.value}%`;
+            if (this.audioEngine) this.audioEngine.setVelocityToAmp(value);
         });
 
         // Filter envelope controls

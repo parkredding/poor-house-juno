@@ -63,13 +63,17 @@ public:
         chorusParams_.mode = 0;  // OFF
         synth_.setChorusParameters(chorusParams_);
 
-        // M11/M13: Default performance parameters
+        // M11/M13/M14: Default performance parameters
         performanceParams_.pitchBend = 0.0f;
         performanceParams_.pitchBendRange = 2.0f;
         performanceParams_.portamentoTime = 0.0f;
         performanceParams_.modWheel = 1.0f;  // M13: Default to full modulation
         performanceParams_.vcaMode = PerformanceParams::VCA_ENV;  // M13: Default to envelope mode
         performanceParams_.filterEnvPolarity = PerformanceParams::FILTER_ENV_NORMAL;  // M13: Default to normal
+        performanceParams_.vcaLevel = 0.8f;  // M14: Default VCA level
+        performanceParams_.masterTune = 0.0f;  // M14: Default to no tuning offset
+        performanceParams_.velocityToFilter = 0.0f;  // M14: Default to no velocity sensitivity
+        performanceParams_.velocityToAmp = 1.0f;  // M14: Default to full velocity to amp
         synth_.setPerformanceParameters(performanceParams_);
     }
 
@@ -269,6 +273,32 @@ public:
         synth_.setPerformanceParameters(performanceParams_);
     }
 
+    // M14: Range & Voice Control
+    void setDcoRange(int range) {
+        dcoParams_.range = range;
+        synth_.setDcoParameters(dcoParams_);
+    }
+
+    void setVcaLevel(float level) {
+        performanceParams_.vcaLevel = level;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setMasterTune(float cents) {
+        performanceParams_.masterTune = cents;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setVelocityToFilter(float amount) {
+        performanceParams_.velocityToFilter = amount;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
+    void setVelocityToAmp(float amount) {
+        performanceParams_.velocityToAmp = amount;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
     // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
         // No-op in new architecture - use handleMidi instead
@@ -342,6 +372,13 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setModWheel", &WebSynth::setModWheel)
         .function("setVcaMode", &WebSynth::setVcaMode)
         .function("setFilterEnvPolarity", &WebSynth::setFilterEnvPolarity)
+
+        // M14: Range & Voice Control
+        .function("setDcoRange", &WebSynth::setDcoRange)
+        .function("setVcaLevel", &WebSynth::setVcaLevel)
+        .function("setMasterTune", &WebSynth::setMasterTune)
+        .function("setVelocityToFilter", &WebSynth::setVelocityToFilter)
+        .function("setVelocityToAmp", &WebSynth::setVelocityToAmp)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)

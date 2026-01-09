@@ -8,6 +8,8 @@ Filter::Filter()
     , envValue_(0.0f)
     , lfoValue_(0.0f)
     , noteFrequency_(440.0f)
+    , velocityValue_(1.0f)  // M14: Default to full velocity
+    , velocityAmount_(0.0f)  // M14: Default to no velocity modulation
     , stage1_(0.0f)
     , stage2_(0.0f)
     , stage3_(0.0f)
@@ -40,6 +42,12 @@ void Filter::setLfoValue(float lfoValue) {
 
 void Filter::setNoteFrequency(float noteFreq) {
     noteFrequency_ = noteFreq;
+}
+
+void Filter::setVelocityValue(float velocity, float amount) {
+    // M14: Set velocity modulation
+    velocityValue_ = clamp(velocity, 0.0f, 1.0f);
+    velocityAmount_ = clamp(amount, 0.0f, 1.0f);
 }
 
 void Filter::reset() {
@@ -157,6 +165,15 @@ float Filter::calculateCutoffHz() {
         }
     }
 
+    // M14: Velocity modulation
+    float velocityMod = 1.0f;
+    if (velocityAmount_ > 0.0f) {
+        // Velocity modulates ±24 semitones (2 octaves) scaled by amount
+        // Higher velocity opens the filter
+        float velocitySemitones = (velocityValue_ - 0.5f) * 2.0f * velocityAmount_ * 24.0f;
+        velocityMod = std::pow(2.0f, velocitySemitones / 12.0f);
+    }
+
     // Combine all modulations (multiplicative)
     float finalCutoff = baseCutoff;
 
@@ -166,6 +183,7 @@ float Filter::calculateCutoffHz() {
 
     finalCutoff *= lfoMod;
     finalCutoff *= keyTrackMod;
+    finalCutoff *= velocityMod;
 
     return finalCutoff;
 }

@@ -41,6 +41,11 @@ public:
     void setVcaMode(int vcaMode);  // 0=ENV, 1=GATE
     void setFilterEnvPolarity(int filterEnvPolarity);  // 0=Normal, 1=Inverse
 
+    // M14: Range & Voice Control
+    void setVcaLevel(float vcaLevel);  // 0.0 - 1.0
+    void setVelocitySensitivity(float filterAmount, float ampAmount);  // 0.0 - 1.0
+    void setMasterTune(float cents);  // ±50 cents
+
     // Process single sample
     Sample process();
 
@@ -83,6 +88,12 @@ private:
     // M13: Performance control state
     int vcaMode_;           // 0=ENV, 1=GATE
     int filterEnvPolarity_; // 0=Normal, 1=Inverse
+
+    // M14: Range & Voice Control state
+    float vcaLevel_;            // VCA output level (0.0 - 1.0)
+    float velocityToFilter_;    // Velocity sensitivity for filter (0.0 - 1.0)
+    float velocityToAmp_;       // Velocity sensitivity for amplitude (0.0 - 1.0)
+    float masterTune_;          // Master tune in cents (±50)
 
     void updateGlide();     // M11: Update portamento glide
 };
