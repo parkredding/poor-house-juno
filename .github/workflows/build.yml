@@ -1,4 +1,8 @@
-name: Build and Deploy to GitHub Pages
+name: Build Verification
+
+# This workflow only builds the project to verify compilation succeeds.
+# Deployment to GitHub Pages must be done manually using ./scripts/deploy_web.sh
+# due to repository permissions.
 
 on:
   push:
@@ -12,12 +16,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -43,21 +41,7 @@ jobs:
           emcmake cmake .. -DPLATFORM=web -DCMAKE_BUILD_TYPE=Release
           emmake make -j$(nproc)
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './web'
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Verify Build Outputs
+        run: |
+          ls -lh web/synth-processor.js web/synth-processor.wasm
+          echo "Build completed successfully!"

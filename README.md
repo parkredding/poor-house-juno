@@ -116,7 +116,8 @@ make pi
 ### Web Interface
 
 **Option 1: GitHub Pages (Live Demo)**
-- Visit the live demo at: https://parkredding.github.io/poor-house-juno/ (auto-deployed from main branch)
+- Visit the live demo at: https://parkredding.github.io/poor-house-juno/
+- Note: Deployment requires manual build and push (see Deployment section below)
 
 **Option 2: Local Development**
 1. Build and serve the web version (see above)
@@ -228,6 +229,37 @@ make -j$(nproc)
 
 ./poor-house-juno
 ```
+
+## Deployment
+
+### Manual GitHub Pages Deployment
+
+Since automated deployment is not available, use the manual deployment script:
+
+```bash
+# Build and deploy to GitHub Pages
+./scripts/deploy_web.sh
+```
+
+**What this script does:**
+1. Builds the web version using Emscripten
+2. Creates or updates the `gh-pages` branch
+3. Copies all web files to the branch root
+4. Commits and pushes to `origin/gh-pages`
+
+**First-time setup:**
+After your first deployment, configure GitHub Pages:
+1. Go to your repository on GitHub
+2. Navigate to **Settings > Pages**
+3. Under **Source**, select the `gh-pages` branch
+4. Click **Save**
+
+Your site will be available at `https://<username>.github.io/poor-house-juno/` within a few minutes.
+
+**Requirements:**
+- Emscripten SDK must be installed and activated
+- You must have push access to the repository
+- The working directory should be clean (commit your changes first)
 
 ## Project Roadmap
 
