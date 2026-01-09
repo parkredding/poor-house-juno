@@ -102,6 +102,17 @@ struct LfoParams {
 };
 
 /**
+ * Chorus parameters
+ */
+struct ChorusParams {
+    int mode;        // 0=Off, 1=Mode I, 2=Mode II, 3=Mode I+II
+
+    ChorusParams()
+        : mode(0)  // Off by default
+    {}
+};
+
+/**
  * Parameter IDs for external control
  */
 enum class ParamId {
@@ -134,6 +145,9 @@ enum class ParamId {
 
     // LFO
     LFO_RATE,
+
+    // Chorus
+    CHORUS_MODE,
 
     // Global
     MASTER_VOLUME,

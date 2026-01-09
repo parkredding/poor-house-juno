@@ -56,6 +56,10 @@ public:
         // Default LFO parameters
         lfoParams_.rate = 2.0f;
         synth_.setLfoParameters(lfoParams_);
+
+        // Default chorus parameters (off by default)
+        chorusParams_.mode = 0;  // OFF
+        synth_.setChorusParameters(chorusParams_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -63,11 +67,8 @@ public:
         float* left = reinterpret_cast<float*>(leftPtr);
         float* right = reinterpret_cast<float*>(rightPtr);
 
-        for (int i = 0; i < numSamples; ++i) {
-            float sample = synth_.process();
-            left[i] = sample;
-            right[i] = sample;
-        }
+        // Process stereo output with chorus
+        synth_.processStereo(left, right, numSamples);
     }
 
     // MIDI handling
@@ -201,6 +202,12 @@ public:
         synth_.setAmpEnvParameters(ampEnvParams_);
     }
 
+    // Parameter control - Chorus
+    void setChorusMode(int mode) {
+        chorusParams_.mode = mode;
+        synth_.setChorusParameters(chorusParams_);
+    }
+
     // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
         // No-op in new architecture - use handleMidi instead
@@ -219,6 +226,7 @@ private:
     EnvelopeParams filterEnvParams_;
     EnvelopeParams ampEnvParams_;
     LfoParams lfoParams_;
+    ChorusParams chorusParams_;
 };
 
 // Emscripten bindings
@@ -258,6 +266,9 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setAmpEnvDecay", &WebSynth::setAmpEnvDecay)
         .function("setAmpEnvSustain", &WebSynth::setAmpEnvSustain)
         .function("setAmpEnvRelease", &WebSynth::setAmpEnvRelease)
+
+        // Chorus parameters
+        .function("setChorusMode", &WebSynth::setChorusMode)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)

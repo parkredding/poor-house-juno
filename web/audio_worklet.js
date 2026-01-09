@@ -136,6 +136,11 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setAmpEnvRelease(data);
                 break;
 
+            // Chorus parameters
+            case 'setChorusMode':
+                synthInstance.setChorusMode(data);
+                break;
+
             // Legacy
             case 'setFrequency':
                 synthInstance.setFrequency(data);

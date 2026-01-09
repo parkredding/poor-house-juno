@@ -4,6 +4,7 @@
 #include "parameters.h"
 #include "voice.h"
 #include "lfo.h"
+#include "chorus.h"
 
 namespace phj {
 
@@ -25,6 +26,7 @@ public:
     void setFilterEnvParameters(const EnvelopeParams& params);
     void setAmpEnvParameters(const EnvelopeParams& params);
     void setLfoParameters(const LfoParams& params);
+    void setChorusParameters(const ChorusParams& params);
 
     // MIDI handling
     void handleNoteOn(int midiNote, float velocity = 1.0f);
@@ -32,8 +34,10 @@ public:
     void allNotesOff();
 
     // Audio processing
-    Sample process();
+    Sample process();  // Mono output (stereo mixed down)
     void process(Sample* output, int numSamples);
+    void processStereo(Sample& leftOut, Sample& rightOut);  // Stereo output with chorus
+    void processStereo(Sample* leftOutput, Sample* rightOutput, int numSamples);
 
     // Reset all state
     void reset();
@@ -47,6 +51,10 @@ private:
 
     // 6 voices for polyphony
     Voice voices_[NUM_VOICES];
+
+    // Chorus effect
+    Chorus chorus_;
+    ChorusParams chorusParams_;
 
     // Current parameters
     DcoParams dcoParams_;
