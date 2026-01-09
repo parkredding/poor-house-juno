@@ -19,7 +19,12 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, real-time audio thread)
 
 **Next Steps:**
-- M11: Final Polish and Reference Matching
+- M11: Critical Features I (HPF, Pitch Bend, Portamento)
+- M12: Critical Features II (LFO Delay, Filter LFO Modulation)
+- M13: Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
+- M14: Range & Voice Control (DCO Range, VCA Level, Velocity Options)
+- M15: Polish & Optimization (Testing, Documentation, TAL Comparison)
+- M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
 
 ## Overview
 
@@ -291,7 +296,53 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M8:** Chorus (BBD emulation)
 - [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators)
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, RT audio)
-- [ ] **M11:** Final Polish and Reference Matching
+- [ ] **M11:** Critical Features I (HPF, Pitch Bend, Portamento)
+- [ ] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
+- [ ] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
+- [ ] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Options)
+- [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
+- [ ] **M16:** Final Refinement (Full MIDI CC, Hold, 128-Patch Banks)
+
+### Upcoming Milestone Details
+
+**M11: Critical Features I** (Est: 20-30 hours)
+- High-Pass Filter (HPF) with 4-position control (0/1/2/3)
+- Pitch Bend wheel support with configurable range (±2 semitones default)
+- Portamento (glide) with adjustable time (0-10 seconds)
+- Web UI controls for all new features
+
+**M12: Critical Features II** (Est: 10-15 hours)
+- LFO Delay implementation (0-3 second delay before modulation)
+- Expose Filter LFO Modulation in web UI (parameter exists in DSP)
+- MIDI CC handlers for new parameters
+
+**M13: Performance Controls** (Est: 15-20 hours)
+- Modulation Wheel (MIDI CC #1) for real-time LFO depth control
+- VCA Control Mode switch (ENV/GATE) for organ-style sounds
+- Filter Envelope Polarity switch (Normal/Inverse)
+- UI controls and visual feedback
+
+**M14: Range & Voice Control** (Est: 12-18 hours)
+- DCO Range selection (16'/8'/4' footage switches)
+- VCA Level control (separate from master volume)
+- Velocity sensitivity options (per-parameter amount controls)
+- Master Tune control (±50 cents)
+
+**M15: Polish & Optimization** (Est: 25-35 hours)
+- Unit tests for DSP components (oscillator, filter, envelopes)
+- TAL-U-NO-LX comparison tools (`tools/analyze_tal.py`, etc.)
+- Generate reference recordings for A/B testing
+- CPU profiling and optimization for Pi 4 (<50% target)
+- Complete documentation (architecture, DSP design, Juno-106 analysis)
+
+**M16: Final Refinement** (Est: 15-20 hours)
+- Full MIDI CC mapping for all synth parameters
+- Hold function (sustain pedal support via MIDI CC #64)
+- 128-patch bank system matching Juno-106 organization
+- Voice allocation priority modes (low-note, high-note, last-note)
+- Final bug fixes and polish
+
+**Total Estimated Time:** 97-138 hours remaining
 
 ## Documentation
 
