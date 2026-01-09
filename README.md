@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M12 - Critical Features II ✅
+**Current Milestone:** M13 - Performance Controls ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -19,9 +19,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, real-time audio thread)
 - [x] **M11:** Critical Features I (HPF with 4 modes, Pitch Bend ±12 semitones, Portamento 0-10s)
 - [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
+- [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
 
 **Next Steps:**
-- M13: Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - M14: Range & Voice Control (DCO Range, VCA Level, Velocity Options)
 - M15: Polish & Optimization (Testing, Documentation, TAL Comparison)
 - M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
@@ -298,7 +298,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M10:** Pi Integration and Optimization (full synth on Pi, CPU monitoring, RT audio)
 - [x] **M11:** Critical Features I (HPF, Pitch Bend, Portamento)
 - [x] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
-- [ ] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
+- [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - [ ] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Options)
 - [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
 - [ ] **M16:** Final Refinement (Full MIDI CC, Hold, 128-Patch Banks)
@@ -319,11 +319,12 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - ✅ Full DSP implementation with fade-in during delay period
 - ✅ Delay timer triggered on note-on events
 
-**M13: Performance Controls** (Est: 15-20 hours)
-- Modulation Wheel (MIDI CC #1) for real-time LFO depth control
-- VCA Control Mode switch (ENV/GATE) for organ-style sounds
-- Filter Envelope Polarity switch (Normal/Inverse)
-- UI controls and visual feedback
+**M13: Performance Controls** ✅ (Completed)
+- ✅ Modulation Wheel (MIDI CC #1) for real-time LFO depth control
+- ✅ VCA Control Mode switch (ENV/GATE) for organ-style sounds
+- ✅ Filter Envelope Polarity switch (Normal/Inverse)
+- ✅ UI controls and visual feedback in web interface
+- ✅ Full DSP implementation with mod wheel scaling LFO output
 
 **M14: Range & Voice Control** (Est: 12-18 hours)
 - DCO Range selection (16'/8'/4' footage switches)
@@ -345,7 +346,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - Voice allocation priority modes (low-note, high-note, last-note)
 - Final bug fixes and polish
 
-**Total Estimated Time:** 77-113 hours remaining (M12 completed)
+**Total Estimated Time:** 91-147 hours remaining (M13 completed)
 
 ## Documentation
 
