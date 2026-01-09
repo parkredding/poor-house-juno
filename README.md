@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M14 - Range & Voice Control ✅
+**Current Milestone:** M15 - Polish & Optimization (In Progress)
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -21,9 +21,16 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
+- [~] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison, Documentation, CPU Profiling)
+
+**M15 Progress:**
+- ✅ Unit Test Suite (comprehensive tests for all DSP components)
+- ⏳ TAL-U-NO-LX Comparison Tools
+- ⏳ Documentation
+- ⏳ CPU Profiling & Optimization
 
 **Next Steps:**
-- M15: Polish & Optimization (Testing, Documentation, TAL Comparison)
+- M15: Complete TAL comparison tools, documentation, and CPU profiling
 - M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
 
 ## Overview
@@ -178,21 +185,46 @@ make pi
 
 ## Testing
 
+### Unit Tests (M15)
+
+Comprehensive unit test suite covering all DSP components:
+
+```bash
+# Build tests (test-only mode, no ALSA/Emscripten required)
+mkdir build-test
+cd build-test
+cmake .. -DBUILD_TESTS=ON -DPLATFORM=test -DCMAKE_BUILD_TYPE=Debug
+make -j$(nproc)
+
+# Run all tests
+./tests/phj_tests
+
+# Run specific test
+./tests/phj_tests "Envelope ADSR stages"
+
+# Run with verbose output
+./tests/phj_tests -s
+```
+
+**Test Coverage:**
+- ✅ Oscillator/DCO (waveform generation, polyBLEP, PWM, LFO modulation)
+- ✅ Filter (IR3109 ladder, resonance, HPF modes, envelope/LFO modulation)
+- ✅ Envelope (ADSR stages, timing accuracy)
+- ✅ LFO (triangle wave, delay feature from M12)
+- ✅ Voice (integration tests, portamento, velocity sensitivity, M13/M14 features)
+
+**Current Status:** 13/25 tests passing (172/189 assertions)
+- See `TEST_FINDINGS.md` for detailed analysis of failing tests
+- Tests identify specific bugs and provide regression prevention
+
+### Web Interface Testing
+
 The web interface includes built-in testing tools:
 
 - **Oscilloscope:** Real-time waveform visualization
 - **MIDI monitor:** Display incoming MIDI messages
 - **Parameter control:** Live parameter adjustment
 - **A/B comparison:** (Planned) Compare output to TAL-U-NO-LX reference recordings
-
-**Unit tests** (planned):
-```bash
-mkdir build-test
-cd build-test
-cmake .. -DBUILD_TESTS=ON
-make
-ctest
-```
 
 ## Technical Details
 
