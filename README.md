@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M8 - Chorus (BBD emulation) ✅
+**Current Milestone:** M9 - Web Interface Polish ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -15,9 +15,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M6:** Single Voice Integration (Voice and Synth classes)
 - [x] **M7:** Polyphony (6 voices with voice stealing)
 - [x] **M8:** Chorus (BBD stereo chorus with modes I, II, and I+II)
+- [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators, improved visualization)
 
 **Next Steps:**
-- M9: Web Interface Polish
 - M10+: Pi Integration and Optimization
 
 ## Overview
@@ -128,10 +128,14 @@ make pi
 6. Connect a MIDI controller for live playback (requires Web MIDI support)
 
 **Features:**
-- Real-time parameter control
-- MIDI input visualization
-- Oscilloscope display
-- MIDI device selection
+- Real-time parameter control with full ADSR, filter, and effects
+- Virtual MIDI keyboard (play with mouse or computer keyboard)
+- Preset management (save, load, delete presets with localStorage)
+- Voice activity indicator (shows active voices 0-6)
+- Estimated CPU usage meter
+- Enhanced oscilloscope display with grid and glow effects
+- MIDI input visualization with activity indicator
+- External MIDI device support
 
 ### Raspberry Pi
 
@@ -274,7 +278,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M6:** Single Voice Integration
 - [x] **M7:** Polyphony (6 voices with voice stealing)
 - [x] **M8:** Chorus (BBD emulation)
-- [ ] **M9:** Web Interface Polish
+- [x] **M9:** Web Interface Polish (virtual keyboard, presets, voice indicators)
 - [ ] **M10:** Pi Integration and Optimization
 - [ ] **M11:** Final Polish and Reference Matching
 

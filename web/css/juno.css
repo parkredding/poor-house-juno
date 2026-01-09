@@ -259,3 +259,179 @@ footer span {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 212, 255, 0.5);
 }
+
+/* Virtual Keyboard Styles */
+.keyboard-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.octave-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.octave-control button {
+    padding: 8px 16px;
+    min-width: 50px;
+}
+
+#octave-display {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #00d4ff;
+    min-width: 30px;
+    text-align: center;
+}
+
+.velocity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.velocity-control input[type="range"] {
+    flex: 1;
+    max-width: 200px;
+}
+
+#virtual-keyboard {
+    display: flex;
+    gap: 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    justify-content: center;
+    user-select: none;
+}
+
+.keyboard-octave {
+    position: relative;
+    display: flex;
+    height: 150px;
+    gap: 2px;
+}
+
+.piano-key {
+    position: relative;
+    cursor: pointer;
+    border-radius: 0 0 4px 4px;
+    transition: all 0.05s ease;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+}
+
+.piano-key.white {
+    width: 40px;
+    height: 150px;
+    background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+    border: 1px solid #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.piano-key.white:hover {
+    background: linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%);
+}
+
+.piano-key.white:active,
+.piano-key.white.active {
+    background: linear-gradient(to bottom, #00d4ff 0%, #00a8cc 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.piano-key.black {
+    position: absolute;
+    width: 28px;
+    height: 95px;
+    background: linear-gradient(to bottom, #2a2a2a 0%, #000000 100%);
+    border: 1px solid #000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    top: 0;
+}
+
+.piano-key.black:hover {
+    background: linear-gradient(to bottom, #3a3a3a 0%, #1a1a1a 100%);
+}
+
+.piano-key.black:active,
+.piano-key.black.active {
+    background: linear-gradient(to bottom, #00a8cc 0%, #007799 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.key-label {
+    font-size: 0.7em;
+    color: #666;
+    font-weight: bold;
+}
+
+.piano-key.black .key-label {
+    color: #999;
+}
+
+/* Voice Indicator Styles */
+.voice-indicators {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.voice-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    transition: all 0.1s ease;
+}
+
+.voice-dot.active {
+    background: #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+}
+
+/* Preset Styles */
+.preset-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.preset-controls select {
+    flex: 1;
+    min-width: 200px;
+}
+
+.preset-controls button {
+    padding: 8px 16px;
+}
+
+.preset-name-input {
+    width: 200px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #00d4ff;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.preset-name-input:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* Improved oscilloscope */
+#oscilloscope {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(0, 212, 255, 0.5);
+}
