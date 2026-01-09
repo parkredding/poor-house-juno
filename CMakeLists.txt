@@ -38,6 +38,8 @@ add_library(phj_dsp STATIC
     src/dsp/filter.cpp
     src/dsp/envelope.cpp
     src/dsp/lfo.cpp
+    src/dsp/voice.cpp
+    src/dsp/synth.cpp
 )
 
 target_include_directories(phj_dsp PUBLIC

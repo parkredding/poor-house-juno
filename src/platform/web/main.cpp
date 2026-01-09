@@ -1,9 +1,6 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include "../../dsp/dco.h"
-#include "../../dsp/filter.h"
-#include "../../dsp/envelope.h"
-#include "../../dsp/lfo.h"
+#include "../../dsp/synth.h"
 #include "../../dsp/parameters.h"
 #include "../../dsp/types.h"
 
@@ -18,15 +15,8 @@ class WebSynth {
 public:
     WebSynth(float sampleRate)
         : sampleRate_(sampleRate)
-        , noteOn_(false)
-        , currentFreq_(440.0f)
     {
-        dco_.setSampleRate(sampleRate);
-        dco_.setFrequency(440.0f);
-        filter_.setSampleRate(sampleRate);
-        filterEnv_.setSampleRate(sampleRate);
-        ampEnv_.setSampleRate(sampleRate);
-        lfo_.setSampleRate(sampleRate);
+        synth_.setSampleRate(sampleRate);
 
         // Default DCO parameters - sawtooth wave
         dcoParams_.sawLevel = 0.5f;
@@ -38,7 +28,7 @@ public:
         dcoParams_.lfoTarget = DcoParams::LFO_OFF;
         dcoParams_.detune = 0.0f;
         dcoParams_.enableDrift = true;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
 
         // Default filter parameters
         filterParams_.cutoff = 0.8f;  // Start fairly open
@@ -47,25 +37,25 @@ public:
         filterParams_.lfoAmount = 0.0f;
         filterParams_.keyTrack = FilterParams::KEY_TRACK_OFF;
         filterParams_.drive = 1.0f;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
 
         // Default filter envelope parameters
         filterEnvParams_.attack = 0.01f;
         filterEnvParams_.decay = 0.3f;
         filterEnvParams_.sustain = 0.7f;
         filterEnvParams_.release = 0.5f;
-        filterEnv_.setParameters(filterEnvParams_);
+        synth_.setFilterEnvParameters(filterEnvParams_);
 
         // Default amplitude envelope parameters
         ampEnvParams_.attack = 0.005f;   // Fast attack for plucky sounds
         ampEnvParams_.decay = 0.3f;
         ampEnvParams_.sustain = 0.8f;
         ampEnvParams_.release = 0.3f;
-        ampEnv_.setParameters(ampEnvParams_);
+        synth_.setAmpEnvParameters(ampEnvParams_);
 
         // Default LFO parameters
         lfoParams_.rate = 2.0f;
-        lfo_.setRate(lfoParams_.rate);
+        synth_.setLfoParameters(lfoParams_);
     }
 
     // Process audio (called from AudioWorklet)
@@ -74,25 +64,7 @@ public:
         float* right = reinterpret_cast<float*>(rightPtr);
 
         for (int i = 0; i < numSamples; ++i) {
-            // Update LFO
-            float lfoValue = lfo_.process();
-            dco_.setLfoValue(lfoValue);
-            filter_.setLfoValue(lfoValue);
-
-            // Update envelopes
-            float filterEnvValue = filterEnv_.process();
-            float ampEnvValue = ampEnv_.process();
-            filter_.setEnvValue(filterEnvValue);
-
-            // Generate DCO sample
-            float dcoOut = dco_.process();
-
-            // Process through filter
-            float filtered = filter_.process(dcoOut);
-
-            // Apply amplitude envelope
-            float sample = filtered * ampEnvValue;
-
+            float sample = synth_.process();
             left[i] = sample;
             right[i] = sample;
         }
@@ -103,170 +75,150 @@ public:
         uint8_t statusByte = status & 0xF0;
 
         if (statusByte == MIDI_NOTE_ON && data2 > 0) {
-            currentFreq_ = midiNoteToFrequency(data1);
-            dco_.setFrequency(currentFreq_);
-            dco_.noteOn();
-            filter_.setNoteFrequency(currentFreq_);
-            filterEnv_.noteOn();
-            ampEnv_.noteOn();
-            noteOn_ = true;
+            float velocity = data2 / 127.0f;
+            synth_.handleNoteOn(data1, velocity);
         } else if (statusByte == MIDI_NOTE_OFF || (statusByte == MIDI_NOTE_ON && data2 == 0)) {
-            dco_.noteOff();
-            filterEnv_.noteOff();
-            ampEnv_.noteOff();
-            noteOn_ = false;
+            synth_.handleNoteOff(data1);
         }
     }
 
     // Parameter control - DCO
     void setSawLevel(float level) {
         dcoParams_.sawLevel = level;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setPulseLevel(float level) {
         dcoParams_.pulseLevel = level;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setSubLevel(float level) {
         dcoParams_.subLevel = level;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setNoiseLevel(float level) {
         dcoParams_.noiseLevel = level;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setPulseWidth(float width) {
         dcoParams_.pulseWidth = width;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setPwmDepth(float depth) {
         dcoParams_.pwmDepth = depth;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setLfoTarget(int target) {
         dcoParams_.lfoTarget = target;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setLfoRate(float rate) {
         lfoParams_.rate = rate;
-        lfo_.setRate(rate);
+        synth_.setLfoParameters(lfoParams_);
     }
 
     void setDetune(float cents) {
         dcoParams_.detune = cents;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     void setDriftEnabled(bool enabled) {
         dcoParams_.enableDrift = enabled;
-        dco_.setParameters(dcoParams_);
+        synth_.setDcoParameters(dcoParams_);
     }
 
     // Parameter control - Filter
     void setFilterCutoff(float cutoff) {
         filterParams_.cutoff = cutoff;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
     }
 
     void setFilterResonance(float resonance) {
         filterParams_.resonance = resonance;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
     }
 
     void setFilterEnvAmount(float amount) {
         filterParams_.envAmount = amount;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
     }
 
     void setFilterLfoAmount(float amount) {
         filterParams_.lfoAmount = amount;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
     }
 
     void setFilterKeyTrack(int mode) {
         filterParams_.keyTrack = mode;
-        filter_.setParameters(filterParams_);
+        synth_.setFilterParameters(filterParams_);
     }
 
     // Parameter control - Filter Envelope
     void setFilterEnvAttack(float attack) {
         filterEnvParams_.attack = attack;
-        filterEnv_.setParameters(filterEnvParams_);
+        synth_.setFilterEnvParameters(filterEnvParams_);
     }
 
     void setFilterEnvDecay(float decay) {
         filterEnvParams_.decay = decay;
-        filterEnv_.setParameters(filterEnvParams_);
+        synth_.setFilterEnvParameters(filterEnvParams_);
     }
 
     void setFilterEnvSustain(float sustain) {
         filterEnvParams_.sustain = sustain;
-        filterEnv_.setParameters(filterEnvParams_);
+        synth_.setFilterEnvParameters(filterEnvParams_);
     }
 
     void setFilterEnvRelease(float release) {
         filterEnvParams_.release = release;
-        filterEnv_.setParameters(filterEnvParams_);
+        synth_.setFilterEnvParameters(filterEnvParams_);
     }
 
     // Parameter control - Amplitude Envelope
     void setAmpEnvAttack(float attack) {
         ampEnvParams_.attack = attack;
-        ampEnv_.setParameters(ampEnvParams_);
+        synth_.setAmpEnvParameters(ampEnvParams_);
     }
 
     void setAmpEnvDecay(float decay) {
         ampEnvParams_.decay = decay;
-        ampEnv_.setParameters(ampEnvParams_);
+        synth_.setAmpEnvParameters(ampEnvParams_);
     }
 
     void setAmpEnvSustain(float sustain) {
         ampEnvParams_.sustain = sustain;
-        ampEnv_.setParameters(ampEnvParams_);
+        synth_.setAmpEnvParameters(ampEnvParams_);
     }
 
     void setAmpEnvRelease(float release) {
         ampEnvParams_.release = release;
-        ampEnv_.setParameters(ampEnvParams_);
+        synth_.setAmpEnvParameters(ampEnvParams_);
     }
 
-    // Legacy interface for compatibility
+    // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
-        dco_.setFrequency(freq);
+        // No-op in new architecture - use handleMidi instead
     }
 
     void setNoteOn(bool on) {
-        if (on && !noteOn_) {
-            dco_.noteOn();
-        } else if (!on && noteOn_) {
-            dco_.noteOff();
-        }
-        noteOn_ = on;
+        // No-op in new architecture - use handleMidi instead
     }
 
 private:
     float sampleRate_;
-    Dco dco_;
-    Filter filter_;
-    Envelope filterEnv_;
-    Envelope ampEnv_;
-    Lfo lfo_;
+    Synth synth_;
 
     DcoParams dcoParams_;
     FilterParams filterParams_;
     EnvelopeParams filterEnvParams_;
     EnvelopeParams ampEnvParams_;
     LfoParams lfoParams_;
-
-    bool noteOn_;
-    float currentFreq_;
 };
 
 // Emscripten bindings

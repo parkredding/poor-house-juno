@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M5 - LFO ✅
+**Current Milestone:** M6 - Single Voice Integration ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -12,9 +12,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M3:** Filter (IR3109 4-pole ladder with envelope modulation)
 - [x] **M4:** Envelopes (Filter and Amplitude ADSR)
 - [x] **M5:** LFO (Triangle wave modulation for pitch and PWM)
+- [x] **M6:** Single Voice Integration (Voice and Synth classes)
 
 **Next Steps:**
-- M6: Single Voice Integration
 - M7: Polyphony (6 voices)
 - M8: Chorus (BBD emulation)
 - M9: Web Interface Polish
@@ -271,7 +271,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M3:** Filter (IR3109 ladder)
 - [x] **M4:** Envelopes (ADSR)
 - [x] **M5:** LFO
-- [ ] **M6:** Single Voice Integration
+- [x] **M6:** Single Voice Integration
 - [ ] **M7:** Polyphony (6 voices)
 - [ ] **M8:** Chorus (BBD emulation)
 - [ ] **M9:** Web Interface Polish
