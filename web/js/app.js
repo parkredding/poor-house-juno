@@ -109,6 +109,12 @@ class App {
             if (this.audioEngine) this.audioEngine.setLfoTarget(value);
         });
 
+        // Chorus controls
+        document.getElementById('chorus-mode').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setChorusMode(value);
+        });
+
         // Filter controls
         document.getElementById('filter-cutoff').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value) / 100;

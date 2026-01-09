@@ -39,6 +39,7 @@ add_library(phj_dsp STATIC
     src/dsp/envelope.cpp
     src/dsp/lfo.cpp
     src/dsp/voice.cpp
+    src/dsp/chorus.cpp
     src/dsp/synth.cpp
 )
 

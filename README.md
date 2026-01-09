@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M7 - Polyphony (6 voices) ✅
+**Current Milestone:** M8 - Chorus (BBD emulation) ✅
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -14,9 +14,9 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M5:** LFO (Triangle wave modulation for pitch and PWM)
 - [x] **M6:** Single Voice Integration (Voice and Synth classes)
 - [x] **M7:** Polyphony (6 voices with voice stealing)
+- [x] **M8:** Chorus (BBD stereo chorus with modes I, II, and I+II)
 
 **Next Steps:**
-- M8: Chorus (BBD emulation)
 - M9: Web Interface Polish
 - M10+: Pi Integration and Optimization
 
@@ -273,7 +273,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M5:** LFO
 - [x] **M6:** Single Voice Integration
 - [x] **M7:** Polyphony (6 voices with voice stealing)
-- [ ] **M8:** Chorus (BBD emulation)
+- [x] **M8:** Chorus (BBD emulation)
 - [ ] **M9:** Web Interface Polish
 - [ ] **M10:** Pi Integration and Optimization
 - [ ] **M11:** Final Polish and Reference Matching

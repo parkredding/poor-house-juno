@@ -209,6 +209,12 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setAmpEnvRelease', data: release });
     }
 
+    // Chorus parameter methods
+    setChorusMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setChorusMode', data: mode });
+    }
+
     // Legacy methods (for compatibility)
     setFrequency(freq) {
         if (!this.initialized || !this.workletNode) return;
