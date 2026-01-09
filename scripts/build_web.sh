@@ -33,9 +33,13 @@ cd "$BUILD_DIR"
 echo "Configuring..."
 emcmake cmake .. -DPLATFORM=web -DCMAKE_BUILD_TYPE=Release
 
-# Build
+# Build - use ninja if available, otherwise make
 echo "Building..."
-emmake make -j$(nproc)
+if command -v ninja &> /dev/null; then
+    ninja
+else
+    emmake make -j$(nproc)
+fi
 
 echo ""
 echo "========================================="
