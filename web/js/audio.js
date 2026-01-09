@@ -131,6 +131,11 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setLfoRate', data: rate });
     }
 
+    setLfoDelay(delay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoDelay', data: delay });
+    }
+
     setDetune(cents) {
         if (!this.initialized || !this.workletNode) return;
         this.workletNode.port.postMessage({ type: 'setDetune', data: cents });
