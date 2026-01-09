@@ -21,7 +21,7 @@ export class AudioEngine {
 
         // Load and register AudioWorklet
         try {
-            await this.audioContext.audioWorklet.addModule('synth-processor.js');
+            await this.audioContext.audioWorklet.addModule('audio_worklet.js');
             console.log('AudioWorklet module loaded');
         } catch (error) {
             console.error('Failed to load AudioWorklet:', error);
