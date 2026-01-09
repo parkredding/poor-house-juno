@@ -237,6 +237,22 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setPortamentoTime', data: seconds });
     }
 
+    // M13: Performance parameter methods
+    setModWheel(value) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setModWheel', data: value });
+    }
+
+    setVcaMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVcaMode', data: mode });
+    }
+
+    setFilterEnvPolarity(polarity) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvPolarity', data: polarity });
+    }
+
     // Legacy methods (for compatibility)
     setFrequency(freq) {
         if (!this.initialized || !this.workletNode) return;

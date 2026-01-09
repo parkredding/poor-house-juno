@@ -120,16 +120,35 @@ struct ChorusParams {
 
 /**
  * M11: Performance parameters (Pitch Bend and Portamento)
+ * M13: Performance Controls (Mod Wheel, VCA Mode, Filter Env Polarity)
  */
 struct PerformanceParams {
     float pitchBend;         // -1.0 to 1.0 (pitch bend amount)
     float pitchBendRange;    // Semitones (default ±2)
     float portamentoTime;    // 0.0 - 10.0 seconds (glide time)
 
+    // M13: Performance Controls
+    float modWheel;          // 0.0 - 1.0 (modulation wheel amount, MIDI CC #1)
+
+    enum VcaMode {
+        VCA_ENV = 0,         // Amplitude envelope controls output (normal)
+        VCA_GATE = 1         // Gate mode: instant on/off (organ-style)
+    };
+    int vcaMode;             // VCA control mode
+
+    enum FilterEnvPolarity {
+        FILTER_ENV_NORMAL = 0,   // Envelope opens filter (normal)
+        FILTER_ENV_INVERSE = 1   // Envelope closes filter (inverted)
+    };
+    int filterEnvPolarity;   // Filter envelope polarity
+
     PerformanceParams()
         : pitchBend(0.0f)
         , pitchBendRange(2.0f)
         , portamentoTime(0.0f)
+        , modWheel(0.0f)
+        , vcaMode(VCA_ENV)
+        , filterEnvPolarity(FILTER_ENV_NORMAL)
     {}
 };
 
@@ -176,6 +195,11 @@ enum class ParamId {
     PITCH_BEND,
     PITCH_BEND_RANGE,
     PORTAMENTO_TIME,
+
+    // M13: Performance Controls
+    MOD_WHEEL,
+    VCA_MODE,
+    FILTER_ENV_POLARITY,
 
     // Global
     MASTER_VOLUME,

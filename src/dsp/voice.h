@@ -37,6 +37,10 @@ public:
     void setPitchBend(float pitchBend, float pitchBendRange);  // pitchBend: -1.0 to 1.0
     void setPortamentoTime(float portamentoTime);  // 0.0 - 10.0 seconds
 
+    // M13: Performance controls
+    void setVcaMode(int vcaMode);  // 0=ENV, 1=GATE
+    void setFilterEnvPolarity(int filterEnvPolarity);  // 0=Normal, 1=Inverse
+
     // Process single sample
     Sample process();
 
@@ -75,6 +79,10 @@ private:
     float currentFreq_;     // Current frequency (with glide)
     float targetFreq_;      // Target frequency
     float glideRate_;       // Frequency change per sample
+
+    // M13: Performance control state
+    int vcaMode_;           // 0=ENV, 1=GATE
+    int filterEnvPolarity_; // 0=Normal, 1=Inverse
 
     void updateGlide();     // M11: Update portamento glide
 };

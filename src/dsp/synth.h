@@ -34,6 +34,7 @@ public:
     void handleNoteOff(int midiNote);
     void allNotesOff();
     void handlePitchBend(float pitchBend);  // M11: -1.0 to 1.0
+    void handleModWheel(float modWheel);    // M13: 0.0 to 1.0 (MIDI CC #1)
 
     // Audio processing
     Sample process();  // Mono output (stereo mixed down)
