@@ -5,10 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Testing option (can be enabled without specifying platform)
+option(BUILD_TESTS "Build unit tests" OFF)
+
 # Platform detection
 if(NOT DEFINED PLATFORM)
     if(EMSCRIPTEN)
         set(PLATFORM "web")
+    elseif(BUILD_TESTS)
+        set(PLATFORM "test")  # Test-only build, no platform-specific code
     else()
         set(PLATFORM "pi")
     endif()
@@ -111,12 +116,15 @@ elseif(PLATFORM STREQUAL "pi")
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/pi
     )
 
+elseif(PLATFORM STREQUAL "test")
+    message(STATUS "Configuring test-only build (no platform executable)")
+    # No platform-specific executable, only DSP library and tests
+
 else()
     message(FATAL_ERROR "Unknown platform: ${PLATFORM}")
 endif()
 
-# Testing (optional, enable with -DBUILD_TESTS=ON)
-option(BUILD_TESTS "Build unit tests" OFF)
+# Testing
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
