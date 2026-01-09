@@ -3,6 +3,7 @@
 #include "../../dsp/dco.h"
 #include "../../dsp/filter.h"
 #include "../../dsp/envelope.h"
+#include "../../dsp/lfo.h"
 #include "../../dsp/parameters.h"
 #include "../../dsp/types.h"
 
@@ -18,8 +19,6 @@ public:
     WebSynth(float sampleRate)
         : sampleRate_(sampleRate)
         , noteOn_(false)
-        , lfoPhase_(0.0f)
-        , lfoRate_(2.0f)
         , currentFreq_(440.0f)
     {
         dco_.setSampleRate(sampleRate);
@@ -27,6 +26,7 @@ public:
         filter_.setSampleRate(sampleRate);
         filterEnv_.setSampleRate(sampleRate);
         ampEnv_.setSampleRate(sampleRate);
+        lfo_.setSampleRate(sampleRate);
 
         // Default DCO parameters - sawtooth wave
         dcoParams_.sawLevel = 0.5f;
@@ -62,6 +62,10 @@ public:
         ampEnvParams_.sustain = 0.8f;
         ampEnvParams_.release = 0.3f;
         ampEnv_.setParameters(ampEnvParams_);
+
+        // Default LFO parameters
+        lfoParams_.rate = 2.0f;
+        lfo_.setRate(lfoParams_.rate);
     }
 
     // Process audio (called from AudioWorklet)
@@ -71,11 +75,9 @@ public:
 
         for (int i = 0; i < numSamples; ++i) {
             // Update LFO
-            float lfoValue = std::sin(lfoPhase_ * TWO_PI);
+            float lfoValue = lfo_.process();
             dco_.setLfoValue(lfoValue);
             filter_.setLfoValue(lfoValue);
-            lfoPhase_ += lfoRate_ / sampleRate_;
-            if (lfoPhase_ >= 1.0f) lfoPhase_ -= 1.0f;
 
             // Update envelopes
             float filterEnvValue = filterEnv_.process();
@@ -153,7 +155,8 @@ public:
     }
 
     void setLfoRate(float rate) {
-        lfoRate_ = rate;
+        lfoParams_.rate = rate;
+        lfo_.setRate(rate);
     }
 
     void setDetune(float cents) {
@@ -254,18 +257,16 @@ private:
     Filter filter_;
     Envelope filterEnv_;
     Envelope ampEnv_;
+    Lfo lfo_;
 
     DcoParams dcoParams_;
     FilterParams filterParams_;
     EnvelopeParams filterEnvParams_;
     EnvelopeParams ampEnvParams_;
+    LfoParams lfoParams_;
 
     bool noteOn_;
     float currentFreq_;
-
-    // Simple LFO (will be replaced with proper LFO module later)
-    float lfoPhase_;
-    float lfoRate_;
 };
 
 // Emscripten bindings

@@ -91,6 +91,17 @@ struct EnvelopeParams {
 };
 
 /**
+ * LFO parameters
+ */
+struct LfoParams {
+    float rate;      // 0.1 - 30.0 Hz
+
+    LfoParams()
+        : rate(2.0f)
+    {}
+};
+
+/**
  * Parameter IDs for external control
  */
 enum class ParamId {
@@ -120,6 +131,9 @@ enum class ParamId {
     AMP_ENV_DECAY,
     AMP_ENV_SUSTAIN,
     AMP_ENV_RELEASE,
+
+    // LFO
+    LFO_RATE,
 
     // Global
     MASTER_VOLUME,
