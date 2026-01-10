@@ -102,11 +102,8 @@ public:
             float bendNormalized = (bendValue - 8192) / 8192.0f;
             synth_.handlePitchBend(bendNormalized);
         } else if (statusByte == MIDI_CONTROL_CHANGE) {
-            // M13: Handle MIDI CC messages
-            if (data1 == 1) {  // CC #1: Modulation Wheel
-                float modWheelValue = data2 / 127.0f;
-                synth_.handleModWheel(modWheelValue);
-            }
+            // M16: Handle all MIDI CC messages (including Arturia MiniLab support)
+            synth_.handleControlChange(data1, data2);
         }
     }
 

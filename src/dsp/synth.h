@@ -35,6 +35,8 @@ public:
     void allNotesOff();
     void handlePitchBend(float pitchBend);  // M11: -1.0 to 1.0
     void handleModWheel(float modWheel);    // M13: 0.0 to 1.0 (MIDI CC #1)
+    void handleControlChange(int controller, int value);  // M16: Generic MIDI CC handler
+    void handleSustainPedal(bool sustain);  // M16: Sustain pedal (CC #64)
 
     // Audio processing
     Sample process();  // Mono output (stereo mixed down)

@@ -160,6 +160,9 @@ struct PerformanceParams {
     float velocityToFilter;  // How much velocity affects filter cutoff
     float velocityToAmp;     // How much velocity affects amplitude
 
+    // M16: Sustain pedal
+    bool sustainPedal;       // Sustain pedal state (CC #64)
+
     PerformanceParams()
         : pitchBend(0.0f)
         , pitchBendRange(2.0f)
@@ -171,6 +174,7 @@ struct PerformanceParams {
         , masterTune(0.0f)
         , velocityToFilter(0.0f)
         , velocityToAmp(1.0f)
+        , sustainPedal(false)
     {}
 };
 
