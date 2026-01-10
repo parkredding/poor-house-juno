@@ -94,6 +94,15 @@ amidi -p hw:1,0,0 -d
 ./build-pi/poor-house-juno --audio hw:0,0 --midi hw:1,0,0
 ```
 
+**Use the Pi as a USB MIDI device (Ableton/DAW → Pi)**
+- Put the Pi in USB gadget mode so your computer sees `PoorHouseJuno` as a MIDI output port.
+- Follow the steps in `docs/pi_setup.md` under “Expose the Pi as a USB MIDI device (OTG to computer)”.
+- After reboot, check `amidi -l` on the Pi (e.g., `hw:2,0,0`), then run:
+```bash
+./build-pi/poor-house-juno --audio hw:0,0 --midi hw:2,0,0
+```
+- In Ableton, select the new MIDI port and send notes/CC to reach the Pi synth.
+
 **Expected output:**
 ```
 Poor House Juno - Raspberry Pi Edition

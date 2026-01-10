@@ -365,6 +365,62 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
+### Expose the Pi as a USB MIDI device (OTG to computer)
+
+This lets your DAW (e.g., Ableton) see the Pi as a USB MIDI output port and send notes/CC back to the synth without a separate MIDI interface.
+
+**Requirements**
+- Raspberry Pi 4 or Zero 2 W (USB-C/OTG capable)
+- USB-C cable from Pi to your computer (data-capable, not charge-only)
+- Raspberry Pi OS Bookworm/Bullseye (paths differ slightly below)
+
+**1) Enable USB gadget mode**
+```bash
+# Backup boot config (Bookworm uses /boot/firmware; Bullseye uses /boot)
+sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.bak 2>/dev/null || true
+sudo cp /boot/config.txt /boot/config.txt.bak 2>/dev/null || true
+
+# Add the dwc2 overlay in config.txt (Bookworm: /boot/firmware/config.txt)
+sudo sed -i '/^dtoverlay=dwc2/!s|^\\(\\[all\\]\\)|\\1\\ndtoverlay=dwc2,dr_mode=peripheral|' /boot/firmware/config.txt 2>/dev/null || \
+sudo sed -i '/^dtoverlay=dwc2/!s|^\\(\\[all\\]\\)|\\1\\ndtoverlay=dwc2,dr_mode=peripheral|' /boot/config.txt
+```
+
+**2) Load the USB MIDI gadget at boot**
+Edit the kernel cmdline and append gadget modules after `rootwait`:
+```bash
+sudo sed -i 's/rootwait/rootwait modules-load=dwc2,g_midi g_midi.id=PoorHouseJuno g_midi.iManufacturer=PoorHouse g_midi.iProduct=Juno/' /boot/firmware/cmdline.txt 2>/dev/null || \
+sudo sed -i 's/rootwait/rootwait modules-load=dwc2,g_midi g_midi.id=PoorHouseJuno g_midi.iManufacturer=PoorHouse g_midi.iProduct=Juno/' /boot/cmdline.txt
+```
+
+**3) Reboot**
+```bash
+sudo reboot
+```
+
+**4) Verify on the Pi**
+After reboot, the Pi exposes a USB MIDI device to the host and also shows up in ALSA:
+```bash
+amidi -l
+# You should see something like:
+# IO  hw:2,0,0  PoorHouseJuno MIDI 1
+```
+
+**5) Use it in the synth**
+Run Poor House Juno and point MIDI to the gadget device:
+```bash
+./build-pi/poor-house-juno --audio hw:0,0 --midi hw:2,0,0
+```
+Adjust the card/device numbers if they differ (`amidi -l` shows the exact hw:x,y,z).
+
+**6) Wire it in your DAW**
+- Plug the Pi’s USB-C into your computer.
+- In Ableton (or any DAW), select the new MIDI output port named `PoorHouseJuno` (or `Linux USB MIDI Gadget` if the name didn’t stick).
+- Send notes/CC to that port; they arrive at the Pi synth on `--midi hw:2,0,0`.
+
+**Notes**
+- Keep the Pi powered via the same USB-C port; avoid unpowered hubs.
+- If you later need to undo this, restore the backups and remove the `modules-load=dwc2,g_midi` entry.
+
 ---
 
 ## Building Poor House Juno

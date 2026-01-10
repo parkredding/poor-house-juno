@@ -5,6 +5,11 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <chrono>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <cstdio>
+#include <alsa/asoundlib.h>
 #include "audio_driver.h"
 #include "midi_driver.h"
 #include "../../dsp/synth.h"
@@ -56,6 +61,113 @@ struct CpuMonitor {
 };
 
 static CpuMonitor g_cpuMonitor;
+
+struct MidiDeviceInfo {
+    std::string hwId;       // e.g., hw:2,0,0
+    std::string cardName;   // e.g., PoorHouseJuno MIDI 1
+    std::string deviceName; // e.g., USB MIDI Gadget
+    bool isGadget;
+};
+
+// Enumerate available ALSA rawmidi input devices.
+static std::vector<MidiDeviceInfo> listMidiInputs() {
+    std::vector<MidiDeviceInfo> devices;
+    int card = -1;
+    if (snd_card_next(&card) < 0 || card < 0) {
+        return devices;
+    }
+
+    while (card >= 0) {
+        snd_ctl_t* ctl = nullptr;
+        char cardId[32];
+        snprintf(cardId, sizeof(cardId), "hw:%d", card);
+        if (snd_ctl_open(&ctl, cardId, 0) < 0) {
+            if (snd_card_next(&card) < 0) break;
+            continue;
+        }
+
+        snd_ctl_card_info_t* cardInfo;
+        snd_ctl_card_info_alloca(&cardInfo);
+        snd_ctl_card_info(ctl, cardInfo);
+        std::string cardName = snd_ctl_card_info_get_name(cardInfo);
+        std::string cardIdStr = snd_ctl_card_info_get_id(cardInfo);
+
+        int device = -1;
+        while (snd_ctl_rawmidi_next_device(ctl, &device) == 0 && device >= 0) {
+            snd_rawmidi_info_t* info;
+            snd_rawmidi_info_alloca(&info);
+            snd_rawmidi_info_set_device(info, device);
+            snd_rawmidi_info_set_stream(info, SND_RAWMIDI_STREAM_INPUT);
+            snd_rawmidi_info_set_subdevice(info, 0);
+
+            if (snd_ctl_rawmidi_info(ctl, info) < 0) {
+                continue;
+            }
+
+            int subs = snd_rawmidi_info_get_subdevices_count(info);
+            for (int sub = 0; sub < subs; ++sub) {
+                snd_rawmidi_info_set_subdevice(info, sub);
+                if (snd_ctl_rawmidi_info(ctl, info) < 0) {
+                    continue;
+                }
+
+                char hwName[32];
+                snprintf(hwName, sizeof(hwName), "hw:%d,%d,%d", card, device, sub);
+
+                std::string deviceName = snd_rawmidi_info_get_name(info);
+                std::string subName = snd_rawmidi_info_get_subdevice_name(info);
+                if (!subName.empty()) {
+                    deviceName += " ";
+                    deviceName += subName;
+                }
+
+                bool isGadget = (cardName.find("g_midi") != std::string::npos) ||
+                                (cardIdStr.find("g_midi") != std::string::npos) ||
+                                (deviceName.find("Gadget") != std::string::npos) ||
+                                (deviceName.find("PoorHouseJuno") != std::string::npos);
+
+                devices.push_back({hwName, cardName, deviceName, isGadget});
+            }
+        }
+
+        snd_ctl_close(ctl);
+        if (snd_card_next(&card) < 0) break;
+    }
+
+    return devices;
+}
+
+// Decide which MIDI device to use when none was specified.
+static MidiDeviceInfo chooseMidiDevice() {
+    MidiDeviceInfo chosen;
+
+    const char* envMidi = std::getenv("PHJ_MIDI_DEVICE");
+    if (envMidi) {
+        chosen.hwId = envMidi;
+        chosen.cardName = "Env override";
+        chosen.deviceName = envMidi;
+        chosen.isGadget = false;
+        return chosen;
+    }
+
+    auto devices = listMidiInputs();
+    if (devices.empty()) {
+        chosen.hwId = "default";
+        chosen.cardName = "ALSA default";
+        chosen.deviceName = "default";
+        chosen.isGadget = false;
+        return chosen;
+    }
+
+    // Prefer USB gadget (DAW → Pi), otherwise first available controller.
+    for (const auto& d : devices) {
+        if (d.isGadget) {
+            return d;
+        }
+    }
+
+    return devices.front();
+}
 
 // Audio callback
 void audioCallback(float* left, float* right, int numSamples, void* userData) {
@@ -207,8 +319,16 @@ int main(int argc, char** argv) {
 
     // Initialize MIDI driver
     MidiDriver midi;
-    if (!midi.initialize("default")) {
-        std::cerr << "Failed to initialize MIDI (this is optional)" << std::endl;
+    MidiDeviceInfo midiDevice = chooseMidiDevice();
+
+    std::cout << "MIDI selection: " << midiDevice.hwId
+              << " (" << midiDevice.cardName << " - " << midiDevice.deviceName << ")"
+              << (midiDevice.isGadget ? " [USB gadget / DAW]" : " [controller/standalone]")
+              << std::endl;
+
+    if (!midi.initialize(midiDevice.hwId)) {
+        std::cerr << "Failed to initialize MIDI device " << midiDevice.hwId
+                  << " (this is optional)" << std::endl;
         // Continue without MIDI
     } else {
         midi.setCallback(midiCallback, &g_synth);
