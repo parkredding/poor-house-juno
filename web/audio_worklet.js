@@ -215,7 +215,13 @@ class SynthProcessor extends AudioWorkletProcessor {
             console.log('AudioWorklet: Initializing WASM module...');
             
             // createSynthProcessor is the default export from synth-processor.js
-            wasmModule = await createSynthProcessor();
+            // We provide a locateFile function to ensure the WASM file is found
+            wasmModule = await createSynthProcessor({
+                locateFile: (path, prefix) => {
+                    // Force the loader to look in the same directory as the worklet
+                    return path;
+                }
+            });
             
             console.log('AudioWorklet: WASM module initialized');
 
