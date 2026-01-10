@@ -144,10 +144,23 @@ main() {
 
     # Optional: Auto-start setup
     echo -e "${YELLOW}Optional:${NC} Set up auto-start on boot?"
-    read -r -p "Configure Poor House Juno to start automatically? (y/n) " REPLY
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        setup_autostart
-    fi
+
+    # Robust prompt: accept y/yes/n/no and keep asking until answered
+    while true; do
+        read -r -p "Configure Poor House Juno to start automatically? (y/n) " REPLY
+        case "$REPLY" in
+            [Yy]|[Yy][Ee][Ss])
+                setup_autostart
+                break
+                ;;
+            [Nn]|[Nn][Oo])
+                break
+                ;;
+            *)
+                echo "Please answer y or n."
+                ;;
+        esac
+    done
 
     echo ""
     print_header "Ready to Rock! 🎹"
