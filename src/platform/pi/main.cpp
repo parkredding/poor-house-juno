@@ -292,6 +292,41 @@ int main(int argc, char** argv) {
     std::cout << "=======================================" << std::endl;
     std::cout << "6-Voice Polyphonic Juno-106 Emulator" << std::endl;
     std::cout << "=======================================" << std::endl;
+    std::cout << "Usage: poor-house-juno [--audio hw:X,Y,Z] [--midi hw:A,B,C]" << std::endl;
+    std::cout << "       Env overrides: PHJ_AUDIO_DEVICE, PHJ_MIDI_DEVICE" << std::endl;
+
+    // Defaults and overrides
+    std::string audioDevice = "default";
+    const char* envAudio = std::getenv("PHJ_AUDIO_DEVICE");
+    if (envAudio) {
+        audioDevice = envAudio;
+    }
+
+    std::string midiOverride;
+
+    // CLI options
+    static struct option longOptions[] = {
+        {"audio", required_argument, nullptr, 'a'},
+        {"midi", required_argument, nullptr, 'm'},
+        {"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}
+    };
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "a:m:h", longOptions, nullptr)) != -1) {
+        switch (opt) {
+            case 'a':
+                audioDevice = optarg;
+                break;
+            case 'm':
+                midiOverride = optarg;
+                break;
+            case 'h':
+            default:
+                std::cout << "Usage: poor-house-juno [--audio hw:X,Y,Z] [--midi hw:A,B,C]" << std::endl;
+                return 0;
+        }
+    }
 
     // Setup signal handlers
     signal(SIGINT, signalHandler);
@@ -305,8 +340,9 @@ int main(int argc, char** argv) {
 
     // Initialize audio driver
     AudioDriver audio;
-    if (!audio.initialize("default", 48000, 128)) {
-        std::cerr << "Failed to initialize audio" << std::endl;
+    if (!audio.initialize(audioDevice, 48000, 128)) {
+        std::cerr << "Failed to initialize audio device '" << audioDevice << "'" << std::endl;
+        std::cerr << "Run 'aplay -l' to list devices; try --audio hw:0,0 or set PHJ_AUDIO_DEVICE." << std::endl;
         return 1;
     }
 
@@ -319,7 +355,15 @@ int main(int argc, char** argv) {
 
     // Initialize MIDI driver
     MidiDriver midi;
-    MidiDeviceInfo midiDevice = chooseMidiDevice();
+    MidiDeviceInfo midiDevice;
+    if (!midiOverride.empty()) {
+        midiDevice.hwId = midiOverride;
+        midiDevice.cardName = "CLI override";
+        midiDevice.deviceName = midiOverride;
+        midiDevice.isGadget = false;
+    } else {
+        midiDevice = chooseMidiDevice();
+    }
 
     std::cout << "MIDI selection: " << midiDevice.hwId
               << " (" << midiDevice.cardName << " - " << midiDevice.deviceName << ")"
