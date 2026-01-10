@@ -172,6 +172,32 @@ class SynthProcessor extends AudioWorkletProcessor {
                 synthInstance.setFilterEnvPolarity(data);
                 break;
 
+            // M14: Range & Voice Control parameters
+            case 'setDcoRange':
+                synthInstance.setDcoRange(data);
+                break;
+
+            case 'setVcaLevel':
+                synthInstance.setVcaLevel(data);
+                break;
+
+            case 'setMasterTune':
+                synthInstance.setMasterTune(data);
+                break;
+
+            case 'setVelocityToFilter':
+                synthInstance.setVelocityToFilter(data);
+                break;
+
+            case 'setVelocityToAmp':
+                synthInstance.setVelocityToAmp(data);
+                break;
+
+            // M16: Voice Allocation Mode
+            case 'setVoiceAllocationMode':
+                synthInstance.setVoiceAllocationMode(data);
+                break;
+
             // Legacy
             case 'setFrequency':
                 synthInstance.setFrequency(data);
