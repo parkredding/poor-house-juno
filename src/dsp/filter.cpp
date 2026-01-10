@@ -56,6 +56,8 @@ void Filter::reset() {
     stage3_ = 0.0f;
     stage4_ = 0.0f;
     hpfState_ = 0.0f;
+    // Ensure coefficients are properly initialized
+    updateCoefficients();
 }
 
 Sample Filter::process(Sample input) {

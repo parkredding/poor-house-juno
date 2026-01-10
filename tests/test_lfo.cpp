@@ -51,10 +51,10 @@ TEST_CASE("LFO triangle wave generation", "[lfo]") {
         lfo.reset();
         lfo.setRate(2.0f);  // 2 Hz
 
-        // At 2 Hz, should complete 2 cycles in 48000 samples
-        // Just verify we get reasonable output
+        // At 2 Hz with 48kHz sample rate, one cycle is 24000 samples
+        // Generate enough samples to see at least one full cycle
         std::vector<float> samples;
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 24000; ++i) {
             samples.push_back(lfo.process());
         }
 
@@ -155,12 +155,14 @@ TEST_CASE("LFO delay functionality (M12)", "[lfo][m12]") {
     }
 
     SECTION("LFO with zero delay starts immediately") {
+        lfo.reset();  // Ensure clean starting state
         lfo.setDelay(0.0f);
         lfo.trigger();
 
-        // Process a few samples
+        // Process enough samples to see meaningful amplitude
+        // At 1Hz, need at least 6000 samples to reach quarter cycle (value ~0.5)
         std::vector<float> samples;
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 6000; ++i) {
             samples.push_back(lfo.process());
         }
 
@@ -207,8 +209,10 @@ TEST_CASE("LFO different delay times", "[lfo][m12]") {
             lfo.process();
         }
 
+        // Sample for 0.1s to stay within mid-delay period
+        // This is while delayScale ramps from ~0.5 to ~0.7
         std::vector<float> samples;
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 4800; ++i) {
             samples.push_back(lfo.process());
         }
 
@@ -217,16 +221,22 @@ TEST_CASE("LFO different delay times", "[lfo][m12]") {
             midDelayMax = std::max(midDelayMax, std::abs(s));
         }
 
-        // Should not yet be at full amplitude
-        REQUIRE(midDelayMax < 0.9f);
+        // Should not yet be at full amplitude (delay scale ~0.5-0.7)
+        REQUIRE(midDelayMax < 0.75f);
 
-        // After full delay period (0.5s = 24000 samples total)
-        for (int i = 0; i < 13000; ++i) {
+        // Reset and test after full delay period
+        lfo.setDelay(0.5f);
+        lfo.trigger();
+
+        // Skip past the full delay period (0.5s = 24000 samples)
+        for (int i = 0; i < 24000; ++i) {
             lfo.process();
         }
 
+        // Sample over one full LFO cycle to capture true amplitude
+        // At 1Hz, one cycle = 48000 samples
         samples.clear();
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 48000; ++i) {
             samples.push_back(lfo.process());
         }
 
@@ -235,8 +245,9 @@ TEST_CASE("LFO different delay times", "[lfo][m12]") {
             postDelayMax = std::max(postDelayMax, std::abs(s));
         }
 
-        // Should be at higher amplitude now
+        // Should be at higher amplitude now (delay scale = 1.0)
         REQUIRE(postDelayMax > midDelayMax);
+        REQUIRE(postDelayMax > 0.85f);  // Should be close to full amplitude
     }
 
     SECTION("Maximum delay of 3 seconds works") {
