@@ -44,8 +44,7 @@ check_platform() {
     if ! grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null && ! grep -q "BCM" /proc/cpuinfo 2>/dev/null; then
         print_error "This script is designed for Raspberry Pi"
         print_info "Detected platform: $(uname -m)"
-        read -p "Continue anyway? (y/n) " -n 1 -r
-        echo
+        read -r -p "Continue anyway? (y/n) " REPLY
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 1
         fi
@@ -145,8 +144,7 @@ main() {
 
     # Optional: Auto-start setup
     echo -e "${YELLOW}Optional:${NC} Set up auto-start on boot?"
-    read -p "Configure Poor House Juno to start automatically? (y/n) " -n 1 -r
-    echo
+    read -r -p "Configure Poor House Juno to start automatically? (y/n) " REPLY
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         setup_autostart
     fi
@@ -164,7 +162,7 @@ setup_autostart() {
     echo "Available MIDI devices:"
     amidi -l || true
     echo ""
-    read -p "Enter MIDI device (e.g., hw:1,0,0) or press Enter for auto-detect: " MIDI_DEV
+    read -r -p "Enter MIDI device (e.g., hw:1,0,0) or press Enter for auto-detect: " MIDI_DEV
     MIDI_DEV=${MIDI_DEV:-hw:1,0,0}
 
     # Create systemd service
