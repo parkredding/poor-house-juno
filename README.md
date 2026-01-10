@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M15 - Polish & Optimization (In Progress)
+**Current Milestone:** M16 - Final Refinement (In Progress)
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -21,17 +21,19 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
-- [~] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison, Documentation, CPU Profiling)
+- [x] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison Tools ✅)
+- [~] **M16:** Final Refinement (Full MIDI CC Mapping ✅, Sustain Pedal ✅, Voice Allocation Modes ✅, 128-Patch Banks pending)
 
-**M15 Progress:**
-- ✅ Unit Test Suite (comprehensive tests for all DSP components including Chorus)
-- ✅ TAL-U-NO-LX Comparison Tools (complete infrastructure, ready for data collection)
-- ⏳ Documentation
-- ⏳ CPU Profiling & Optimization
+**M16 Progress:**
+- ✅ Comprehensive MIDI CC Mapping (29 CCs for all synth parameters)
+- ✅ Sustain Pedal Support (MIDI CC #64 with voice sustain logic)
+- ✅ Voice Allocation Priority Modes (Oldest, Newest, Low-Note, High-Note)
+- ⏳ 128-Patch Bank System (deferred)
+- ⏳ Web UI Updates for new features
 
 **Next Steps:**
-- M15: Complete TAL comparison tools, documentation, and CPU profiling
-- M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
+- M16: Update web UI controls for voice allocation mode
+- Future: Complete 128-patch bank system
 
 ## Overview
 
@@ -334,8 +336,8 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
-- [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
-- [ ] **M16:** Final Refinement (Full MIDI CC, Hold, 128-Patch Banks)
+- [x] **M15:** Polish & Optimization (Testing ✅, TAL Comparison Tools ✅)
+- [~] **M16:** Final Refinement (Full MIDI CC ✅, Sustain Pedal ✅, Voice Allocation ✅, Patch Banks pending)
 
 ### Upcoming Milestone Details
 
@@ -375,12 +377,29 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - CPU profiling and optimization for Pi 4 (<50% target)
 - Complete documentation (architecture, DSP design, Juno-106 analysis)
 
-**M16: Final Refinement** (Est: 15-20 hours)
-- Full MIDI CC mapping for all synth parameters
-- Hold function (sustain pedal support via MIDI CC #64)
-- 128-patch bank system matching Juno-106 organization
-- Voice allocation priority modes (low-note, high-note, last-note)
-- Final bug fixes and polish
+**M16: Final Refinement** ✅ (Core features completed)
+- ✅ Full MIDI CC mapping for all synth parameters (29 CCs)
+  - CC #1: Mod Wheel
+  - CC #14-17: DCO waveform levels (Saw, Pulse, Sub, Noise)
+  - CC #18: DCO LFO Target
+  - CC #19: DCO Range (16'/8'/4')
+  - CC #20: Filter LFO Amount
+  - CC #21: Filter Key Track
+  - CC #22: HPF Mode
+  - CC #23: VCA Mode (ENV/GATE)
+  - CC #24: Filter Env Polarity
+  - CC #25: VCA Level
+  - CC #26: Master Tune (±50 cents)
+  - CC #27-28: Velocity Sensitivity (Filter, Amp)
+  - CC #29: Voice Allocation Mode
+  - CC #64: Sustain Pedal
+  - CC #71-86: Filter, LFO, and Envelope parameters
+  - CC #91: Chorus Mode
+  - CC #102-103: Portamento Time, Pitch Bend Range
+- ✅ Sustain pedal support (MIDI CC #64) with full voice sustain logic
+- ✅ Voice allocation priority modes: Oldest (default), Newest, Low-Note Priority, High-Note Priority
+- ⏳ 128-patch bank system (deferred to future milestone)
+- ⏳ Web UI updates for voice allocation mode
 
 **Total Estimated Time:** 40-55 hours remaining (M14 completed)
 

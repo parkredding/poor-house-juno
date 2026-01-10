@@ -100,37 +100,64 @@ int Synth::findFreeVoice() const {
 }
 
 int Synth::findVoiceToSteal() const {
-    int oldestReleasingVoice = -1;
-    float oldestReleasingAge = -1.0f;
+    // M16: Voice allocation with priority modes
+    int bestReleasingVoice = -1;
+    float bestReleasingScore = -1.0f;
 
-    int oldestVoice = -1;
-    float oldestAge = -1.0f;
+    int bestActiveVoice = -1;
+    float bestActiveScore = -1.0f;
 
-    // Find oldest releasing voice, or oldest active voice
+    // Determine what "best" means based on allocation mode
     for (int i = 0; i < NUM_VOICES; ++i) {
-        float age = voices_[i].getAge();
+        if (!voices_[i].isActive()) continue;
+
+        float score = 0.0f;
+
+        switch (performanceParams_.voiceAllocationMode) {
+            case 0:  // VOICE_ALLOC_OLDEST (default)
+                score = voices_[i].getAge();  // Higher age = better candidate
+                break;
+
+            case 1:  // VOICE_ALLOC_NEWEST (last-note priority)
+                score = -voices_[i].getAge();  // Lower age = better candidate
+                break;
+
+            case 2:  // VOICE_ALLOC_LOW_NOTE (protect low notes)
+                // Steal higher notes first
+                score = voices_[i].getCurrentNote();  // Higher note = better candidate
+                break;
+
+            case 3:  // VOICE_ALLOC_HIGH_NOTE (protect high notes)
+                // Steal lower notes first
+                score = -voices_[i].getCurrentNote();  // Lower note = better candidate
+                break;
+
+            default:
+                score = voices_[i].getAge();  // Fallback to oldest
+                break;
+        }
 
         if (voices_[i].isReleasing()) {
             // Prefer releasing voices
-            if (age > oldestReleasingAge) {
-                oldestReleasingAge = age;
-                oldestReleasingVoice = i;
+            if (score > bestReleasingScore || bestReleasingVoice == -1) {
+                bestReleasingScore = score;
+                bestReleasingVoice = i;
             }
-        } else if (voices_[i].isActive()) {
-            // Track oldest active voice as fallback
-            if (age > oldestAge) {
-                oldestAge = age;
-                oldestVoice = i;
+        } else {
+            // Track best active voice as fallback
+            if (score > bestActiveScore || bestActiveVoice == -1) {
+                bestActiveScore = score;
+                bestActiveVoice = i;
             }
         }
     }
 
-    // Prefer stealing releasing voices, fall back to oldest active
-    if (oldestReleasingVoice != -1) {
-        return oldestReleasingVoice;
+    // Prefer stealing releasing voices, fall back to best active
+    if (bestReleasingVoice != -1) {
+        return bestReleasingVoice;
     }
 
-    return oldestVoice;
+    return bestActiveVoice;
 }
 
 void Synth::handleNoteOn(int midiNote, float velocity) {
@@ -186,6 +213,86 @@ void Synth::handleControlChange(int controller, int value) {
     switch (controller) {
         case 1:  // Mod Wheel (also handled by handleModWheel)
             performanceParams_.modWheel = normalized;
+            break;
+
+        case 14:  // DCO Saw Level
+            dcoParams_.sawLevel = normalized;
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 15:  // DCO Pulse Level
+            dcoParams_.pulseLevel = normalized;
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 16:  // DCO Sub Level
+            dcoParams_.subLevel = normalized;
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 17:  // DCO Noise Level
+            dcoParams_.noiseLevel = normalized;
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 18:  // DCO LFO Target (0-3 discrete values)
+            dcoParams_.lfoTarget = static_cast<int>(normalized * 3.99f);
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 19:  // DCO Range (0-2 discrete values: 16'/8'/4')
+            dcoParams_.range = static_cast<int>(normalized * 2.99f);
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 20:  // Filter LFO Amount
+            filterParams_.lfoAmount = normalized;
+            setFilterParameters(filterParams_);
+            break;
+
+        case 21:  // Filter Key Track (0-2 discrete values)
+            filterParams_.keyTrack = static_cast<int>(normalized * 2.99f);
+            setFilterParameters(filterParams_);
+            break;
+
+        case 22:  // HPF Mode (0-3 discrete values)
+            filterParams_.hpfMode = static_cast<int>(normalized * 3.99f);
+            setFilterParameters(filterParams_);
+            break;
+
+        case 23:  // VCA Mode (0-1 discrete values: ENV/GATE)
+            performanceParams_.vcaMode = (value >= 64) ? 1 : 0;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 24:  // Filter Env Polarity (0-1 discrete values: Normal/Inverse)
+            performanceParams_.filterEnvPolarity = (value >= 64) ? 1 : 0;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 25:  // VCA Level
+            performanceParams_.vcaLevel = normalized;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 26:  // Master Tune (bipolar: -50 to +50 cents)
+            performanceParams_.masterTune = (normalized * 100.0f) - 50.0f;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 27:  // Velocity to Filter
+            performanceParams_.velocityToFilter = normalized;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 28:  // Velocity to Amp
+            performanceParams_.velocityToAmp = normalized;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 29:  // Voice Allocation Mode (0-3 discrete values)
+            performanceParams_.voiceAllocationMode = static_cast<int>(normalized * 3.99f);
+            setPerformanceParameters(performanceParams_);
             break;
 
         case 64:  // Sustain Pedal
@@ -298,13 +405,15 @@ void Synth::handleControlChange(int controller, int value) {
 
 void Synth::handleSustainPedal(bool sustain) {
     // M16: Sustain pedal handling (CC #64)
-    // Basic implementation - stores state for future use
-    // Full sustain logic will be implemented in Voice class later
     performanceParams_.sustainPedal = sustain;
 
-    // TODO: Implement full sustain logic in Voice class
-    // - When sustain is on, prevent note-off from releasing voices
-    // - When sustain is released, release all sustained voices
+    // Update all voices with new sustain state
+    for (int i = 0; i < NUM_VOICES; ++i) {
+        voices_[i].setSustained(sustain);
+    }
+
+    // When sustain is released, voices that were sustained will automatically
+    // release via the Voice::setSustained() method
 }
 
 void Synth::processStereo(Sample& leftOut, Sample& rightOut) {

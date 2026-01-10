@@ -8,6 +8,7 @@ Voice::Voice()
     , velocity_(0.0f)
     , age_(0.0f)
     , noteActive_(false)
+    , sustained_(false)  // M16: Initialize sustain state
     , sampleRate_(SAMPLE_RATE)
     , lfoValue_(0.0f)
     , pitchBend_(0.0f)
@@ -79,10 +80,16 @@ void Voice::noteOn(int midiNote, float velocity) {
 }
 
 void Voice::noteOff() {
+    // M16: Note is no longer being held by key
     noteActive_ = false;
-    dco_.noteOff();
-    filterEnv_.noteOff();
-    ampEnv_.noteOff();
+
+    // M16: Only release envelopes if NOT sustained by pedal
+    // If sustained, mark the voice as sustained but don't release yet
+    if (!sustained_) {
+        dco_.noteOff();
+        filterEnv_.noteOff();
+        ampEnv_.noteOff();
+    }
 }
 
 void Voice::reset() {
@@ -90,6 +97,7 @@ void Voice::reset() {
     velocity_ = 0.0f;
     age_ = 0.0f;
     noteActive_ = false;
+    sustained_ = false;  // M16: Clear sustain state
     lfoValue_ = 0.0f;
     pitchBend_ = 0.0f;
     targetNote_ = -1;
@@ -142,6 +150,17 @@ void Voice::setVelocitySensitivity(float filterAmount, float ampAmount) {
 void Voice::setMasterTune(float cents) {
     // M14: Set master tune (±50 cents)
     masterTune_ = clamp(cents, -50.0f, 50.0f);
+}
+
+void Voice::setSustained(bool sustained) {
+    // M16: Set sustain state
+    // If transitioning from sustained to not sustained, release the voice
+    if (sustained_ && !sustained && !noteActive_) {
+        dco_.noteOff();
+        filterEnv_.noteOff();
+        ampEnv_.noteOff();
+    }
+    sustained_ = sustained;
 }
 
 Sample Voice::process() {
