@@ -63,8 +63,15 @@ private:
     float hpfState_;
     float hpfG_;        // HPF cutoff coefficient
 
+    // M15: Performance optimization - cache modulation values
+    float cachedEnvValue_;
+    float cachedLfoValue_;
+    float cachedVelocityValue_;
+    bool coefficientsNeedUpdate_;
+
     // Helper methods
     void updateCoefficients();
+    void updateCoefficientsIfNeeded();  // M15: Conditional update
     float calculateCutoffHz();
     float saturate(float x);  // Soft saturation
     float processHPF(float input);  // M11: High-pass filter processing

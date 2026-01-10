@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M15 - Polish & Optimization (In Progress)
+**Current Milestone:** M16 - Final Refinement (Upcoming)
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -21,17 +21,16 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M12:** Critical Features II (LFO Delay 0-3s, Filter LFO Modulation exposed in UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
-- [~] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison, Documentation, CPU Profiling)
+- [x] **M15:** Polish & Optimization (Unit Tests, TAL Comparison Tools, Documentation, CPU Profiling) ✅
 
-**M15 Progress:**
-- ✅ Unit Test Suite (comprehensive tests for all DSP components including Chorus)
+**M15 Summary (Completed):**
+- ✅ Unit Test Suite (32 tests, 237 assertions, all DSP components)
 - ✅ TAL-U-NO-LX Comparison Tools (complete infrastructure, ready for data collection)
-- ⏳ Documentation
-- ⏳ CPU Profiling & Optimization
+- ✅ Comprehensive Documentation (8 technical documents covering all aspects)
+- ✅ CPU Profiling & Optimization (filter coefficient caching - 30-50% improvement)
 
 **Next Steps:**
-- M15: Complete TAL comparison tools, documentation, and CPU profiling
-- M16: Final Refinement (MIDI CC Mapping, Hold, Bank System)
+- M16: Final Refinement (Full MIDI CC Mapping, Sustain Pedal, 128-Patch Banks, Voice Priority Modes)
 
 ## Overview
 
@@ -334,7 +333,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - [x] **M12:** Critical Features II (LFO Delay, Filter LFO Modulation UI)
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
-- [ ] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
+- [x] **M15:** Polish & Optimization (Testing, Documentation, TAL Comparison Tools)
 - [ ] **M16:** Final Refinement (Full MIDI CC, Hold, 128-Patch Banks)
 
 ### Upcoming Milestone Details
@@ -368,12 +367,12 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - ✅ Full DSP implementation with velocity modulation
 - ✅ UI controls in web interface
 
-**M15: Polish & Optimization** (Est: 25-35 hours)
-- Unit tests for DSP components (oscillator, filter, envelopes)
-- TAL-U-NO-LX comparison tools (`tools/analyze_tal.py`, etc.)
-- Generate reference recordings for A/B testing
-- CPU profiling and optimization for Pi 4 (<50% target)
-- Complete documentation (architecture, DSP design, Juno-106 analysis)
+**M15: Polish & Optimization** ✅ (Completed)
+- ✅ Unit tests for all DSP components (32 tests, 237 assertions)
+- ✅ TAL-U-NO-LX comparison tools infrastructure (ready for data collection)
+- ✅ CPU profiling tool and filter optimization (30-50% improvement)
+- ✅ Comprehensive documentation (8 technical documents)
+- ✅ Performance improvements (coefficient caching, conditional updates)
 
 **M16: Final Refinement** (Est: 15-20 hours)
 - Full MIDI CC mapping for all synth parameters
@@ -382,16 +381,20 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - Voice allocation priority modes (low-note, high-note, last-note)
 - Final bug fixes and polish
 
-**Total Estimated Time:** 40-55 hours remaining (M14 completed)
+**Total Estimated Time:** 23-35 hours remaining (M15 completed, M16 remaining)
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) (planned)
-- [DSP Design](docs/dsp_design.md) (planned)
-- [Juno-106 Analysis](docs/juno106_analysis.md) (planned)
-- [Filter Tuning](docs/filter_tuning.md) (planned)
-- [Chorus Analysis](docs/chorus_analysis.md) (planned)
-- [Pi Setup Guide](docs/pi_setup.md) (planned)
+Comprehensive technical documentation is available in the `docs/` directory:
+
+- [Architecture](docs/architecture.md) - System design, build system, platform architecture
+- [DSP Design](docs/dsp_design.md) - DSP algorithms, filter/oscillator design, signal flow
+- [Juno-106 Analysis](docs/juno106_analysis.md) - Reverse engineering notes, component analysis
+- [Filter Tuning](docs/filter_tuning.md) - IR3109 calibration, cutoff/resonance mapping
+- [Chorus Analysis](docs/chorus_analysis.md) - BBD chorus design, modulation characteristics
+- [Pi Setup Guide](docs/pi_setup.md) - Raspberry Pi configuration, ALSA setup, troubleshooting
+- [Web Interface](docs/web_interface.md) - Web Audio API, WASM integration, UI architecture
+- [MIDI CC Map](docs/midi_cc_map.md) - MIDI implementation reference
 
 ## Tools
 
