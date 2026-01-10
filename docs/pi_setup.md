@@ -194,8 +194,51 @@ card 1: Device [USB Audio Device], device 0: USB Audio [USB Audio]
   Subdevices: 1/1
 ```
 
-**Card 0:** Built-in headphone jack (not recommended - poor quality)
-**Card 1:** USB audio interface (use this!)
+**Card 0:** Built-in 3.5mm headphone jack (basic quality, works for testing)
+**Card 1:** USB audio interface (recommended for best quality)
+
+### Using the Built-in 3.5mm Audio Jack
+
+**For Raspberry Pi's internal 3.5mm headphone jack:**
+
+The built-in audio jack (card 0) provides basic stereo output suitable for practice and small setups.
+
+**Configure for 3.5mm output:**
+```bash
+# Test the built-in jack
+speaker-test -D hw:0,0 -c 2 -r 48000
+
+# Run Poor House Juno with 3.5mm output
+./build-pi/poor-house-juno --audio hw:0,0
+```
+
+**Set as default audio device:**
+Edit `~/.asoundrc`:
+```bash
+pcm.!default {
+    type hw
+    card 0
+    device 0
+}
+
+ctl.!default {
+    type hw
+    card 0
+}
+```
+
+**Volume Control:**
+```bash
+# Adjust headphone volume
+alsamixer
+# Use arrow keys to adjust PCM volume
+# Press F6 to select sound card if multiple cards
+```
+
+**Notes:**
+- The 3.5mm jack provides lower quality than USB audio interfaces
+- Suitable for headphones, small speakers, or line-level input to mixers
+- Works perfectly for live performance and jamming
 
 ### Test Audio Output
 
@@ -526,7 +569,7 @@ Type=simple
 User=pi
 Group=audio
 WorkingDirectory=/home/pi/poor-house-juno
-ExecStart=/home/pi/poor-house-juno/build-pi/poor-house-juno --audio hw:1,0 --midi hw:1,0,0
+ExecStart=/home/pi/poor-house-juno/build-pi/poor-house-juno --audio hw:0,0 --midi hw:1,0,0
 Restart=on-failure
 RestartSec=5s
 
