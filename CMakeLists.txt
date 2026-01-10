@@ -77,7 +77,7 @@ if(PLATFORM STREQUAL "web")
             -s ALLOW_MEMORY_GROWTH=1 \
             -s INITIAL_MEMORY=16777216 \
             -s ENVIRONMENT='web,worker' \
-            -s SINGLE_FILE=0 \
+            -s SINGLE_FILE=1 \
             --no-entry \
             -lembind \
         "
