@@ -25,7 +25,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 **M15 Progress:**
 - ✅ Unit Test Suite (comprehensive tests for all DSP components including Chorus)
-- ⏳ TAL-U-NO-LX Comparison Tools
+- ✅ TAL-U-NO-LX Comparison Tools (complete infrastructure, ready for data collection)
 - ⏳ Documentation
 - ⏳ CPU Profiling & Optimization
 
@@ -395,12 +395,19 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 
 ## Tools
 
-- `tools/analyze_tal.py` - Analyze TAL-U-NO-LX parameters
-- `tools/measure_filter.py` - Measure filter frequency response
-- `tools/measure_chorus.py` - Analyze chorus characteristics
-- `tools/export_preset.py` - Convert TAL presets
+Analysis tools for validating Poor House Juno accuracy (M15):
 
-*(Tools will be implemented in future milestones)*
+- `tools/generate_reference.py` - Generate test signals and reference recordings
+- `tools/measure_filter.py` - Measure filter frequency response and compare outputs
+- `tools/measure_chorus.py` - Analyze chorus delay, modulation, and stereo imaging
+- `tools/analyze_tal.py` - Analyze parameter curves and fit mathematical models
+
+See [tools/README.md](tools/README.md) for detailed usage instructions.
+
+**Requirements:**
+```bash
+pip install -r tools/requirements.txt
+```
 
 ## Contributing
 
