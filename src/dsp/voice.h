@@ -46,6 +46,10 @@ public:
     void setVelocitySensitivity(float filterAmount, float ampAmount);  // 0.0 - 1.0
     void setMasterTune(float cents);  // ±50 cents
 
+    // M16: Sustain pedal support
+    void setSustained(bool sustained);  // Mark voice as sustained
+    bool isSustained() const { return sustained_; }
+
     // Process single sample
     Sample process();
 
@@ -70,6 +74,7 @@ private:
     float velocity_;        // Note velocity (0.0 - 1.0)
     float age_;            // Voice age in samples (for voice stealing)
     bool noteActive_;      // True if note is currently held
+    bool sustained_;       // M16: True if note is sustained by pedal
 
     float sampleRate_;
     float lfoValue_;

@@ -163,6 +163,15 @@ struct PerformanceParams {
     // M16: Sustain pedal
     bool sustainPedal;       // Sustain pedal state (CC #64)
 
+    // M16: Voice allocation priority mode
+    enum VoiceAllocationMode {
+        VOICE_ALLOC_OLDEST = 0,    // Steal oldest voice (default, current behavior)
+        VOICE_ALLOC_NEWEST = 1,    // Steal newest voice (last-note priority)
+        VOICE_ALLOC_LOW_NOTE = 2,  // Low-note priority (protect lowest notes)
+        VOICE_ALLOC_HIGH_NOTE = 3  // High-note priority (protect highest notes)
+    };
+    int voiceAllocationMode;  // Voice allocation strategy
+
     PerformanceParams()
         : pitchBend(0.0f)
         , pitchBendRange(2.0f)
@@ -175,6 +184,7 @@ struct PerformanceParams {
         , velocityToFilter(0.0f)
         , velocityToAmp(1.0f)
         , sustainPedal(false)
+        , voiceAllocationMode(VOICE_ALLOC_OLDEST)
     {}
 };
 
