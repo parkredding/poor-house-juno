@@ -308,7 +308,13 @@ AUDIO_DEVICE=${SELECTED_AUDIO}
 # Leave empty for auto-detection
 MIDI_DEVICE=
 EOF
-    print_success "Configuration saved to ${CONFIG_FILE}"
+    echo ""
+    print_header "Configuration Saved"
+    echo ""
+    echo "Audio Device: ${SELECTED_AUDIO}"
+    echo "Config File:  ${CONFIG_FILE}"
+    echo ""
+    print_success "Configuration saved successfully"
 
     # Summary
     echo ""
