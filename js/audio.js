@@ -1,0 +1,333 @@
+/**
+ * Web Audio engine integration
+ */
+
+export class AudioEngine {
+    constructor() {
+        this.audioContext = null;
+        this.workletNode = null;
+        this.analyser = null;
+        this.initialized = false;
+    }
+
+    async init() {
+        // Create audio context
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            sampleRate: 48000,
+            latencyHint: 'interactive'
+        });
+
+        console.log('AudioContext created:', this.audioContext.sampleRate, 'Hz');
+
+        // Resume audio context (required by browsers for user-initiated audio)
+        await this.audioContext.resume();
+        console.log('AudioContext resumed, state:', this.audioContext.state);
+
+        // Load and register AudioWorklet
+        try {
+            console.log('Loading AudioWorklet module: audio_worklet.js');
+            // We MUST specify type: 'module' to use import statements inside the worklet
+            await this.audioContext.audioWorklet.addModule('audio_worklet.js', {
+                type: 'module'
+            });
+            console.log('AudioWorklet module loaded');
+        } catch (error) {
+            console.error('Failed to load AudioWorklet:', error);
+            throw new Error('AudioWorklet not supported or failed to load: ' + error.message);
+        }
+
+        // Create worklet node
+        console.log('Creating AudioWorkletNode: synth-processor');
+        this.workletNode = new AudioWorkletNode(this.audioContext, 'synth-processor', {
+            numberOfInputs: 0,
+            numberOfOutputs: 1,
+            outputChannelCount: [2]
+        });
+
+        // Create analyser for visualization
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+
+        // Connect: worklet -> analyser -> destination
+        this.workletNode.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+        console.log('Audio nodes connected');
+
+        // Setup message handler
+        return new Promise((resolve, reject) => {
+            const initTimeout = setTimeout(() => {
+                reject(new Error('WASM initialization timed out (10s)'));
+            }, 10000);
+
+            this.workletNode.port.onmessage = (event) => {
+                const { type, error } = event.data;
+                
+                if (type === 'initialized') {
+                    clearTimeout(initTimeout);
+                    console.log('WASM synth initialized successfully');
+                    this.initialized = true;
+                    resolve();
+                } else if (type === 'error') {
+                    clearTimeout(initTimeout);
+                    console.error('Worklet reported error:', error);
+                    reject(new Error(error));
+                }
+
+                this.handleWorkletMessage(event.data);
+            };
+
+            // Initialize WASM in worklet
+            console.log('Sending init message to worklet');
+            this.workletNode.port.postMessage({
+                type: 'init',
+                data: {}
+            });
+        });
+    }
+
+    handleWorkletMessage(message) {
+        const { type, data, error } = message;
+
+        switch (type) {
+            case 'ready':
+                console.log('Worklet ready');
+                break;
+
+            case 'initialized':
+                console.log('WASM synth initialized in worklet');
+                break;
+
+            case 'error':
+                console.error('Worklet error:', error);
+                break;
+        }
+    }
+
+    handleMidi(data) {
+        if (!this.initialized || !this.workletNode) return;
+
+        this.workletNode.port.postMessage({
+            type: 'midi',
+            data: Array.from(data)
+        });
+    }
+
+    // DCO parameter methods
+    setSawLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setSawLevel', data: level });
+    }
+
+    setPulseLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPulseLevel', data: level });
+    }
+
+    setSubLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setSubLevel', data: level });
+    }
+
+    setNoiseLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setNoiseLevel', data: level });
+    }
+
+    setPulseWidth(width) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPulseWidth', data: width });
+    }
+
+    setPwmDepth(depth) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPwmDepth', data: depth });
+    }
+
+    setLfoTarget(target) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoTarget', data: target });
+    }
+
+    setLfoRate(rate) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoRate', data: rate });
+    }
+
+    setLfoDelay(delay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setLfoDelay', data: delay });
+    }
+
+    setDetune(cents) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDetune', data: cents });
+    }
+
+    setDriftEnabled(enabled) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDriftEnabled', data: enabled });
+    }
+
+    // Filter parameter methods
+    setFilterCutoff(cutoff) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterCutoff', data: cutoff });
+    }
+
+    setFilterResonance(resonance) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterResonance', data: resonance });
+    }
+
+    setFilterEnvAmount(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvAmount', data: amount });
+    }
+
+    setFilterLfoAmount(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterLfoAmount', data: amount });
+    }
+
+    setFilterKeyTrack(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterKeyTrack', data: mode });
+    }
+
+    // M11: HPF parameter method
+    setFilterHpfMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterHpfMode', data: mode });
+    }
+
+    // Filter envelope parameter methods
+    setFilterEnvAttack(attack) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvAttack', data: attack });
+    }
+
+    setFilterEnvDecay(decay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvDecay', data: decay });
+    }
+
+    setFilterEnvSustain(sustain) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvSustain', data: sustain });
+    }
+
+    setFilterEnvRelease(release) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvRelease', data: release });
+    }
+
+    // Amplitude envelope parameter methods
+    setAmpEnvAttack(attack) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvAttack', data: attack });
+    }
+
+    setAmpEnvDecay(decay) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvDecay', data: decay });
+    }
+
+    setAmpEnvSustain(sustain) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvSustain', data: sustain });
+    }
+
+    setAmpEnvRelease(release) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setAmpEnvRelease', data: release });
+    }
+
+    // Chorus parameter methods
+    setChorusMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setChorusMode', data: mode });
+    }
+
+    // M11: Performance parameter methods
+    setPitchBendRange(semitones) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPitchBendRange', data: semitones });
+    }
+
+    setPortamentoTime(seconds) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setPortamentoTime', data: seconds });
+    }
+
+    // M13: Performance parameter methods
+    setModWheel(value) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setModWheel', data: value });
+    }
+
+    setVcaMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVcaMode', data: mode });
+    }
+
+    setFilterEnvPolarity(polarity) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFilterEnvPolarity', data: polarity });
+    }
+
+    // M14: Range & Voice Control parameter methods
+    setDcoRange(range) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDcoRange', data: range });
+    }
+
+    setVcaLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVcaLevel', data: level });
+    }
+
+    setMasterTune(cents) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setMasterTune', data: cents });
+    }
+
+    setVelocityToFilter(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVelocityToFilter', data: amount });
+    }
+
+    setVelocityToAmp(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVelocityToAmp', data: amount });
+    }
+
+    // M16: Voice Allocation Mode
+    setVoiceAllocationMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVoiceAllocationMode', data: mode });
+    }
+
+    // Legacy methods (for compatibility)
+    setFrequency(freq) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setFrequency', data: freq });
+    }
+
+    getInfo() {
+        return {
+            sampleRate: this.audioContext.sampleRate,
+            bufferSize: 128, // Worklet uses 128 by default
+            latency: this.audioContext.baseLatency * 1000 // Convert to ms
+        };
+    }
+
+    getAnalyser() {
+        return this.analyser;
+    }
+
+    shutdown() {
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+    }
+}

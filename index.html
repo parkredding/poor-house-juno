@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poor House Juno - Web Test</title>
+    <link rel="stylesheet" href="css/juno.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Poor House Juno</h1>
+            <p class="subtitle">Roland Juno-106 Emulator - Test Environment</p>
+        </header>
+
+        <div class="status-bar">
+            <div id="status">Initializing...</div>
+            <div>
+                <span>Voices: </span>
+                <span id="voice-count">0/6</span>
+                <div class="voice-indicators" style="display: inline-flex; margin-left: 10px;">
+                    <div class="voice-dot" id="voice-0"></div>
+                    <div class="voice-dot" id="voice-1"></div>
+                    <div class="voice-dot" id="voice-2"></div>
+                    <div class="voice-dot" id="voice-3"></div>
+                    <div class="voice-dot" id="voice-4"></div>
+                    <div class="voice-dot" id="voice-5"></div>
+                </div>
+            </div>
+            <div id="cpu-meter">CPU: <span id="cpu-value">0%</span></div>
+        </div>
+
+        <div class="synth-panel">
+            <!-- DCO Section -->
+            <div class="section">
+                <h2>DCO - Digitally Controlled Oscillator</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="saw-level">Sawtooth Level</label>
+                        <input type="range" id="saw-level" min="0" max="100" value="50" step="1">
+                        <span id="saw-level-value">50%</span>
+                    </div>
+                    <div class="control">
+                        <label for="pulse-level">Pulse Level</label>
+                        <input type="range" id="pulse-level" min="0" max="100" value="0" step="1">
+                        <span id="pulse-level-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="sub-level">Sub-Oscillator Level</label>
+                        <input type="range" id="sub-level" min="0" max="100" value="0" step="1">
+                        <span id="sub-level-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="noise-level">Noise Level</label>
+                        <input type="range" id="noise-level" min="0" max="100" value="0" step="1">
+                        <span id="noise-level-value">0%</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="pulse-width">Pulse Width</label>
+                        <input type="range" id="pulse-width" min="5" max="95" value="50" step="1">
+                        <span id="pulse-width-value">50%</span>
+                    </div>
+                    <div class="control">
+                        <label for="pwm-depth">PWM Depth</label>
+                        <input type="range" id="pwm-depth" min="0" max="100" value="0" step="1">
+                        <span id="pwm-depth-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="detune">Detune (cents)</label>
+                        <input type="range" id="detune" min="-10" max="10" value="0" step="0.1">
+                        <span id="detune-value">0.0</span>
+                    </div>
+                    <div class="control">
+                        <label for="drift-enabled">Pitch Drift</label>
+                        <input type="checkbox" id="drift-enabled" checked>
+                        <span>Enabled</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="dco-range">Range (M14)</label>
+                        <select id="dco-range">
+                            <option value="0">16' (Low)</option>
+                            <option value="1" selected>8' (Normal)</option>
+                            <option value="2">4' (High)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="section">
+                <h2>Filter (IR3109 4-Pole Ladder)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="filter-cutoff">Cutoff</label>
+                        <input type="range" id="filter-cutoff" min="0" max="100" value="80" step="1">
+                        <span id="filter-cutoff-value">80%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-resonance">Resonance</label>
+                        <input type="range" id="filter-resonance" min="0" max="100" value="0" step="1">
+                        <span id="filter-resonance-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-amount">Env Amount</label>
+                        <input type="range" id="filter-env-amount" min="-100" max="100" value="0" step="1">
+                        <span id="filter-env-amount-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-key-track">Key Tracking</label>
+                        <select id="filter-key-track">
+                            <option value="0">Off</option>
+                            <option value="1">Half</option>
+                            <option value="2">Full</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="filter-hpf">HPF Mode</label>
+                        <select id="filter-hpf">
+                            <option value="0">Off</option>
+                            <option value="1">30 Hz</option>
+                            <option value="2">60 Hz</option>
+                            <option value="3">120 Hz</option>
+                        </select>
+                    </div>
+                    <div class="control">
+                        <label for="filter-lfo-amount">LFO Amount</label>
+                        <input type="range" id="filter-lfo-amount" min="0" max="100" value="0" step="1">
+                        <span id="filter-lfo-amount-value">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- M11/M13/M14: Performance Controls -->
+            <div class="section">
+                <h2>Performance (M11/M13/M14/M16)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="pitch-bend-range">Pitch Bend Range (semitones)</label>
+                        <input type="range" id="pitch-bend-range" min="0" max="12" value="2" step="1">
+                        <span id="pitch-bend-range-value">±2</span>
+                    </div>
+                    <div class="control">
+                        <label for="portamento-time">Portamento Time (seconds)</label>
+                        <input type="range" id="portamento-time" min="0" max="10" value="0" step="0.1">
+                        <span id="portamento-time-value">0.0s</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="mod-wheel">Modulation Wheel (M13)</label>
+                        <input type="range" id="mod-wheel" min="0" max="100" value="100" step="1">
+                        <span id="mod-wheel-value">100%</span>
+                    </div>
+                    <div class="control">
+                        <label for="vca-mode">VCA Mode (M13)</label>
+                        <select id="vca-mode">
+                            <option value="0">ENV (Envelope)</option>
+                            <option value="1">GATE (Instant)</option>
+                        </select>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-polarity">Filter Env Polarity (M13)</label>
+                        <select id="filter-env-polarity">
+                            <option value="0">Normal (Open)</option>
+                            <option value="1">Inverse (Close)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control">
+                        <label for="vca-level">VCA Level (M14)</label>
+                        <input type="range" id="vca-level" min="0" max="100" value="80" step="1">
+                        <span id="vca-level-value">80%</span>
+                    </div>
+                    <div class="control">
+                        <label for="master-tune">Master Tune (M14, cents)</label>
+                        <input type="range" id="master-tune" min="-50" max="50" value="0" step="1">
+                        <span id="master-tune-value">0</span>
+                    </div>
+                    <div class="control">
+                        <label for="velocity-to-filter">Velocity → Filter (M14)</label>
+                        <input type="range" id="velocity-to-filter" min="0" max="100" value="0" step="1">
+                        <span id="velocity-to-filter-value">0%</span>
+                    </div>
+                    <div class="control">
+                        <label for="velocity-to-amp">Velocity → Amp (M14)</label>
+                        <input type="range" id="velocity-to-amp" min="0" max="100" value="100" step="1">
+                        <span id="velocity-to-amp-value">100%</span>
+                    </div>
+                    <div class="control">
+                        <label for="voice-allocation-mode">Voice Allocation (M16)</label>
+                        <select id="voice-allocation-mode">
+                            <option value="0">Oldest (Default)</option>
+                            <option value="1">Newest (Last-Note)</option>
+                            <option value="2">Low-Note Priority</option>
+                            <option value="3">High-Note Priority</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Envelope Section -->
+            <div class="section">
+                <h2>Filter Envelope (ADSR)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="filter-env-attack">Attack</label>
+                        <input type="range" id="filter-env-attack" min="1" max="3000" value="10" step="1">
+                        <span id="filter-env-attack-value">10ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-decay">Decay</label>
+                        <input type="range" id="filter-env-decay" min="2" max="12000" value="300" step="1">
+                        <span id="filter-env-decay-value">300ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-sustain">Sustain</label>
+                        <input type="range" id="filter-env-sustain" min="0" max="100" value="70" step="1">
+                        <span id="filter-env-sustain-value">70%</span>
+                    </div>
+                    <div class="control">
+                        <label for="filter-env-release">Release</label>
+                        <input type="range" id="filter-env-release" min="2" max="12000" value="500" step="1">
+                        <span id="filter-env-release-value">500ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amplitude Envelope Section -->
+            <div class="section">
+                <h2>Amplitude Envelope (ADSR)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="amp-env-attack">Attack</label>
+                        <input type="range" id="amp-env-attack" min="1" max="3000" value="5" step="1">
+                        <span id="amp-env-attack-value">5ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="amp-env-decay">Decay</label>
+                        <input type="range" id="amp-env-decay" min="2" max="12000" value="300" step="1">
+                        <span id="amp-env-decay-value">300ms</span>
+                    </div>
+                    <div class="control">
+                        <label for="amp-env-sustain">Sustain</label>
+                        <input type="range" id="amp-env-sustain" min="0" max="100" value="80" step="1">
+                        <span id="amp-env-sustain-value">80%</span>
+                    </div>
+                    <div class="control">
+                        <label for="amp-env-release">Release</label>
+                        <input type="range" id="amp-env-release" min="2" max="12000" value="300" step="1">
+                        <span id="amp-env-release-value">300ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LFO Section -->
+            <div class="section">
+                <h2>LFO</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="lfo-rate">Rate (Hz)</label>
+                        <input type="range" id="lfo-rate" min="0.1" max="30" value="2" step="0.1">
+                        <span id="lfo-rate-value">2.0 Hz</span>
+                    </div>
+                    <div class="control">
+                        <label for="lfo-delay">Delay (M12)</label>
+                        <input type="range" id="lfo-delay" min="0" max="3" value="0" step="0.1">
+                        <span id="lfo-delay-value">0.0s</span>
+                    </div>
+                    <div class="control">
+                        <label for="lfo-target">Target</label>
+                        <select id="lfo-target">
+                            <option value="0">Off</option>
+                            <option value="1">Pitch</option>
+                            <option value="2">PWM</option>
+                            <option value="3">Both</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chorus Section -->
+            <div class="section">
+                <h2>Chorus (BBD)</h2>
+                <div class="controls">
+                    <div class="control">
+                        <label for="chorus-mode">Mode</label>
+                        <select id="chorus-mode">
+                            <option value="0">Off</option>
+                            <option value="1">I</option>
+                            <option value="2">II</option>
+                            <option value="3">I+II</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Virtual Keyboard -->
+            <div class="section">
+                <h2>Virtual Keyboard</h2>
+                <div class="keyboard-controls">
+                    <div class="octave-control">
+                        <button id="octave-down">-</button>
+                        <span>Octave: <span id="octave-display">4</span></span>
+                        <button id="octave-up">+</button>
+                    </div>
+                    <div class="velocity-control">
+                        <label for="velocity-slider">Velocity:</label>
+                        <input type="range" id="velocity-slider" min="1" max="127" value="100" step="1">
+                        <span id="velocity-value">100</span>
+                    </div>
+                </div>
+                <div id="virtual-keyboard"></div>
+                <p style="margin-top: 15px; color: #a0a0a0; font-size: 0.9em; text-align: center;">
+                    Play with mouse or computer keyboard: Z-M keys (white), S-L keys (black)
+                </p>
+            </div>
+
+            <!-- Presets -->
+            <div class="section">
+                <h2>Presets</h2>
+                <div class="preset-controls">
+                    <select id="preset-select">
+                        <option value="">-- Select Preset --</option>
+                    </select>
+                    <button id="preset-load">Load</button>
+                    <input type="text" id="preset-name" class="preset-name-input" placeholder="Preset name...">
+                    <button id="preset-save">Save</button>
+                    <button id="preset-delete">Delete</button>
+                </div>
+            </div>
+
+            <!-- Test Controls -->
+            <div class="section">
+                <h2>Test</h2>
+                <div class="controls">
+                    <button id="start-audio" class="primary">Start Audio</button>
+                    <button id="play-note" disabled>Play A4 (440 Hz)</button>
+                    <button id="stop-note" disabled>Stop Note</button>
+                </div>
+            </div>
+
+            <!-- MIDI Section -->
+            <div class="section">
+                <h2>MIDI</h2>
+                <div class="controls">
+                    <select id="midi-input">
+                        <option value="">No MIDI device</option>
+                    </select>
+                    <div id="midi-activity" class="midi-indicator"></div>
+                </div>
+                <div id="midi-log" class="log"></div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="section">
+                <h2>Scope</h2>
+                <canvas id="oscilloscope" width="800" height="200"></canvas>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Sample Rate: <span id="sample-rate">-</span> Hz |
+                Buffer Size: <span id="buffer-size">-</span> samples |
+                Latency: <span id="latency">-</span> ms
+            </p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
