@@ -69,7 +69,6 @@ if(PLATFORM STREQUAL "web")
         LINK_FLAGS "\
             -O3 \
             -s WASM=1 \
-            -s EXPORT_ES6=1 \
             -s MODULARIZE=1 \
             -s EXPORT_NAME='createSynthProcessor' \
             -s EXPORTED_FUNCTIONS=['_malloc','_free'] \
