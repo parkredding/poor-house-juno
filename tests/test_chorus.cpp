@@ -128,13 +128,15 @@ TEST_CASE("Chorus Mode I characteristics (M8)", "[chorus][m8]") {
     chorus.setMode(Chorus::MODE_I);
 
     SECTION("Mode I produces stereo output") {
-        // Generate constant tone to fill delay buffer
-        float input = 0.5f;
+        // Generate sine wave input (100 Hz) to properly demonstrate chorus effect
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
 
         // Fill delay buffer (need at least 3ms worth of samples)
         // Mode I: 2.5ms delay + 0.5ms depth = up to 3ms
         int fillSamples = static_cast<int>(3.5f * sampleRate / 1000.0f);
         for (int i = 0; i < fillSamples; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -146,6 +148,7 @@ TEST_CASE("Chorus Mode I characteristics (M8)", "[chorus][m8]") {
         std::vector<float> rightSamples;
 
         for (int i = 0; i < cycleSamples; ++i) {
+            float input = std::sin(omega * (fillSamples + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -185,9 +188,13 @@ TEST_CASE("Chorus Mode I characteristics (M8)", "[chorus][m8]") {
     }
 
     SECTION("Mode I modulation creates time-varying output") {
-        // Fill delay buffer with constant signal
-        float input = 0.5f;
+        // Use sine wave input to demonstrate chorus modulation
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
+
+        // Fill delay buffer with sine wave
         for (int i = 0; i < 200; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -197,6 +204,7 @@ TEST_CASE("Chorus Mode I characteristics (M8)", "[chorus][m8]") {
         int sampleCount = static_cast<int>(sampleRate * 0.2f);  // 200ms
 
         for (int i = 0; i < sampleCount; ++i) {
+            float input = std::sin(omega * (200 + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -224,13 +232,15 @@ TEST_CASE("Chorus Mode II characteristics (M8)", "[chorus][m8]") {
     chorus.setMode(Chorus::MODE_II);
 
     SECTION("Mode II produces stereo output") {
-        // Generate constant tone to fill delay buffer
-        float input = 0.5f;
+        // Generate sine wave input (100 Hz) to properly demonstrate chorus effect
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
 
         // Fill delay buffer (need at least 5ms worth of samples)
         // Mode II: 4.0ms delay + 0.8ms depth = up to 4.8ms
         int fillSamples = static_cast<int>(5.5f * sampleRate / 1000.0f);
         for (int i = 0; i < fillSamples; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -242,6 +252,7 @@ TEST_CASE("Chorus Mode II characteristics (M8)", "[chorus][m8]") {
         std::vector<float> rightSamples;
 
         for (int i = 0; i < cycleSamples; ++i) {
+            float input = std::sin(omega * (fillSamples + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -281,9 +292,13 @@ TEST_CASE("Chorus Mode II characteristics (M8)", "[chorus][m8]") {
     }
 
     SECTION("Mode II has slower modulation than Mode I") {
-        // Fill delay buffer with constant signal
-        float input = 0.5f;
+        // Use sine wave input to demonstrate chorus modulation
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
+
+        // Fill delay buffer with sine wave
         for (int i = 0; i < 250; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -293,6 +308,7 @@ TEST_CASE("Chorus Mode II characteristics (M8)", "[chorus][m8]") {
         int sampleCount = static_cast<int>(sampleRate * 0.1f);
 
         for (int i = 0; i < sampleCount; ++i) {
+            float input = std::sin(omega * (250 + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -320,10 +336,14 @@ TEST_CASE("Chorus Mode I+II (Both) characteristics (M8)", "[chorus][m8]") {
     chorus.setMode(Chorus::MODE_BOTH);
 
     SECTION("Mode BOTH produces richer stereo output than individual modes") {
+        // Use sine wave input to demonstrate chorus effect
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
+
         // Fill delay buffer
-        float input = 0.5f;
         int fillSamples = static_cast<int>(6.0f * sampleRate / 1000.0f);
         for (int i = 0; i < fillSamples; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -334,6 +354,7 @@ TEST_CASE("Chorus Mode I+II (Both) characteristics (M8)", "[chorus][m8]") {
         int sampleCount = static_cast<int>(sampleRate * 0.5f);  // 500ms
 
         for (int i = 0; i < sampleCount; ++i) {
+            float input = std::sin(omega * (fillSamples + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -386,9 +407,13 @@ TEST_CASE("Chorus BBD delay modulation", "[chorus][m8]") {
     chorus.setMode(Chorus::MODE_I);
 
     SECTION("LFO modulates delay time creating chorus effect") {
-        // Fill delay buffer with constant tone
-        float input = 0.5f;
+        // Use sine wave input to demonstrate chorus modulation
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
+
+        // Fill delay buffer with sine wave
         for (int i = 0; i < 200; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -399,6 +424,7 @@ TEST_CASE("Chorus BBD delay modulation", "[chorus][m8]") {
         std::vector<float> outputs;
 
         for (int i = 0; i < cycleTime; ++i) {
+            float input = std::sin(omega * (200 + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
@@ -414,9 +440,13 @@ TEST_CASE("Chorus BBD delay modulation", "[chorus][m8]") {
     }
 
     SECTION("Opposite LFO phases create stereo width") {
-        // Fill delay buffer
-        float input = 0.5f;
+        // Use sine wave input to demonstrate stereo effect
+        const float freq = 100.0f;
+        const float omega = 2.0f * 3.14159265f * freq / sampleRate;
+
+        // Fill delay buffer with sine wave
         for (int i = 0; i < 200; ++i) {
+            float input = std::sin(omega * i);
             float leftOut, rightOut;
             chorus.process(input, leftOut, rightOut);
         }
@@ -428,6 +458,7 @@ TEST_CASE("Chorus BBD delay modulation", "[chorus][m8]") {
 
         int sampleCount = static_cast<int>(sampleRate * 0.3f);  // 300ms
         for (int i = 0; i < sampleCount; ++i) {
+            float input = std::sin(omega * (200 + i));
             float leftOut = 0.0f;
             float rightOut = 0.0f;
             chorus.process(input, leftOut, rightOut);
