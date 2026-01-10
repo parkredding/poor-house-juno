@@ -2,6 +2,8 @@
 
 A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-engineered from TAL-U-NO-LX behavior, with a browser-based testing environment.
 
+**Quick Deployment:** See [DEPLOY.md](DEPLOY.md) for rapid deployment on Raspberry Pi with 3.5mm audio and Arturia MiniLab.
+
 ## Project Status
 
 **Current Milestone:** M16 - Final Refinement (✅ Complete)
@@ -160,8 +162,11 @@ make pi
 # Run with default audio/MIDI devices
 ./build-pi/poor-house-juno
 
-# Specify devices (optional)
-./build-pi/poor-house-juno --audio hw:1,0 --midi hw:1,0
+# Use built-in 3.5mm audio jack + USB MIDI
+./build-pi/poor-house-juno --audio hw:0,0 --midi hw:1,0,0
+
+# Or use USB audio interface
+./build-pi/poor-house-juno --audio hw:1,0 --midi hw:1,0,0
 ```
 
 **Features (M10):**
