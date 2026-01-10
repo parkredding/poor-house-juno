@@ -26,7 +26,10 @@ export class AudioEngine {
         // Load and register AudioWorklet
         try {
             console.log('Loading AudioWorklet module: audio_worklet.js');
-            await this.audioContext.audioWorklet.addModule('audio_worklet.js');
+            // We MUST specify type: 'module' to use import statements inside the worklet
+            await this.audioContext.audioWorklet.addModule('audio_worklet.js', {
+                type: 'module'
+            });
             console.log('AudioWorklet module loaded');
         } catch (error) {
             console.error('Failed to load AudioWorklet:', error);

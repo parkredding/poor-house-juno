@@ -3,8 +3,9 @@
  * This runs in the audio thread and calls into WASM
  */
 
+import createSynthProcessor from './synth-processor.js';
+
 // Import the WASM module
-// This will be loaded when the worklet is registered
 let wasmModule = null;
 let synthInstance = null;
 
@@ -211,15 +212,9 @@ class SynthProcessor extends AudioWorkletProcessor {
 
     async initWasm(moduleData) {
         try {
-            console.log('AudioWorklet: Loading WASM module using importScripts...');
+            console.log('AudioWorklet: Initializing WASM module...');
             
-            // In a Worklet, we use importScripts for maximum compatibility
-            // The path is relative to the worklet's base URL
-            importScripts('synth-processor.js');
-            
-            console.log('AudioWorklet: WASM script loaded, initializing...');
-            
-            // createSynthProcessor is defined globally by synth-processor.js
+            // createSynthProcessor is the default export from synth-processor.js
             wasmModule = await createSynthProcessor();
             
             console.log('AudioWorklet: WASM module initialized');
