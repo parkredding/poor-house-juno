@@ -248,10 +248,11 @@ Recent commits 0159f58 and 83d9bc1 fixed all critical DSP bugs:
 
 ## 📋 PHASE 3: M16 - Final Refinement
 
-**Priority: LOW** | **Time Estimate: 23-35 hours**
+**Priority: LOW** | **Time Estimate: 23-35 hours**  
+**Status:** ✅ **CODE COMPLETE** (Pending testing with WASM build)
 
 ### 5. Full MIDI CC Mapping (8-12 hours)
-**Status:** ⏳ Not started
+**Status:** ✅ Complete (Backend implementation done)
 **Current:** Only CC #1 (Mod Wheel) and Pitch Bend
 **Impact:** MODERATE - Enables hardware controller integration
 
@@ -304,7 +305,7 @@ Recent commits 0159f58 and 83d9bc1 fixed all critical DSP bugs:
 ---
 
 ### 6. Sustain Pedal (MIDI CC #64) (3-5 hours)
-**Status:** ⏳ Not started
+**Status:** ✅ Complete (Backend implementation done)
 **Why:** Essential performance feature for piano-style playing
 **Impact:** MINOR - Nice to have, not critical
 
@@ -435,7 +436,7 @@ function handleProgramChange(program) {
 ---
 
 ### 8. Voice Allocation Priority Modes (4-6 hours)
-**Status:** ⏳ Not started
+**Status:** ✅ Complete (Full implementation with Web UI)
 **Current:** Basic oldest-voice stealing
 **Why:** Different playing styles benefit from different allocation strategies
 **Impact:** MINOR - Current algorithm is reasonable for most use cases
@@ -511,11 +512,12 @@ Voice* Synth::findVoiceToSteal() {
 | 2. TAL Comparison Tools | M15 | 🟡 MEDIUM | 20-30 | ⏳ Pending |
 | 3. CPU Profiling & Optimization | M15 | 🟡 MEDIUM | 10-20 | ⏳ Pending |
 | 4. Documentation | M15 | 🟡 MEDIUM | 15-25 | ⏳ Pending |
-| 5. Full MIDI CC Mapping | M16 | 🟢 LOW | 8-12 | ⏳ Pending |
-| 6. Sustain Pedal | M16 | 🟢 LOW | 3-5 | ⏳ Pending |
-| 7. 128-Patch Bank System | M16 | 🟢 LOW | 8-12 | ⏳ Pending |
-| 8. Voice Priority Modes | M16 | 🟢 LOW | 4-6 | ⏳ Pending |
-| **TOTAL REMAINING** | | | **71-115 hours** | |
+| 5. Full MIDI CC Mapping | M16 | 🟢 LOW | 0 | ✅ **COMPLETE** |
+| 6. Sustain Pedal | M16 | 🟢 LOW | 0 | ✅ **COMPLETE** |
+| 7. 128-Patch Bank System | M16 | 🟢 LOW | 8-12 | ⏳ Deferred (Optional) |
+| 8. Voice Priority Modes | M16 | 🟢 LOW | 0 | ✅ **COMPLETE** |
+| **M16 TOTAL** | | | **0 hours** | ✅ **CODE COMPLETE** |
+| **TOTAL REMAINING (M15+Optional)** | | | **56-92 hours** | |
 
 ---
 
@@ -549,6 +551,15 @@ Voice* Synth::findVoiceToSteal() {
 
 ## 🏁 Completion Milestones
 
+### After M16 (Current) ✅
+- Faithfulness: **90%** (code complete)
+- All core features implemented
+- Full MIDI CC support
+- Voice allocation modes
+- M14 controls integrated
+- Web UI complete
+- Ready for testing (pending WASM build)
+
 ### After Sprint 1-2 (M15 Testing & Optimization)
 - Faithfulness: **92%**
 - All DSP verified and optimized
@@ -561,9 +572,9 @@ Voice* Synth::findVoiceToSteal() {
 - Easy onboarding for contributors
 - Clear user guides
 
-### After Sprint 4-5 (M16 Final Refinement)
+### Production Ready (M15 Complete)
 - Faithfulness: **95%**
-- Complete MIDI support
+- Complete MIDI support ✅
 - Production-ready feature set
 - Ready for public release
 
