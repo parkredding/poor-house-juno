@@ -51,6 +51,77 @@ check_platform() {
     fi
 }
 
+# Detect and test audio devices to find the best one
+detect_audio_device() {
+    local best_device=""
+    local best_score=0
+
+    # Parse aplay -l output to extract all available devices
+    while IFS= read -r line; do
+        # Match lines like: "card 0: vc4hdmi0 [vc4-hdmi-0], device 0:"
+        if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
+            local card="${BASH_REMATCH[1]}"
+            local card_name="${BASH_REMATCH[2]}"
+            local device="${BASH_REMATCH[3]}"
+            local hw_id="hw:${card},${device}"
+
+            # Test if device works with stereo playback
+            print_info "Testing ${hw_id} (${card_name})..."
+
+            # Quick test: try to open device with speaker-test
+            # Use timeout to limit test duration, and -l 1 for just one iteration
+            if timeout 1 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+                # Device works! Now score it based on type
+                local score=1
+                local description="${card_name}"
+
+                # Scoring system (higher is better):
+                # USB audio interfaces: 100
+                # Analog/headphones: 50
+                # HDMI: 10
+
+                if [[ $card_name =~ (USB|Audio) ]]; then
+                    score=100
+                    description="USB Audio"
+                elif [[ $card_name =~ (Headphones|bcm2835|Analog) ]]; then
+                    score=50
+                    description="Headphones/Analog"
+                elif [[ $card_name =~ (HDMI|hdmi|vc4) ]]; then
+                    score=10
+                    description="HDMI"
+                fi
+
+                print_success "  ${hw_id} works (${description})"
+
+                # Keep track of best device
+                if [ $score -gt $best_score ]; then
+                    best_score=$score
+                    best_device=$hw_id
+                fi
+            else
+                print_info "  ${hw_id} not compatible"
+            fi
+        fi
+    done < <(aplay -l 2>/dev/null)
+
+    echo "$best_device"
+}
+
+# Test if a specific audio device works with Poor House Juno requirements
+test_audio_device() {
+    local device="$1"
+
+    # Quick compatibility test using speaker-test
+    # We test with the same parameters Poor House Juno needs:
+    # - Stereo (2 channels)
+    # - 48kHz sample rate
+    if timeout 0.5 speaker-test -D "$device" -c 2 -r 48000 -t sine >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Main installation
 main() {
     print_header "Poor House Juno - Raspberry Pi Installer"
@@ -112,13 +183,24 @@ main() {
     print_success "Build completed"
 
     # Step 5: Test installation
-    print_step 5 5 "Verifying installation"
+    print_step 5 6 "Verifying installation"
 
     if [ -f "${INSTALL_DIR}/build-pi/poor-house-juno" ]; then
         print_success "Binary created successfully"
     else
         print_error "Build failed - binary not found"
         exit 1
+    fi
+
+    # Step 6: Detect and test audio devices
+    print_step 6 6 "Detecting audio devices"
+    RECOMMENDED_AUDIO=$(detect_audio_device)
+
+    if [ -n "$RECOMMENDED_AUDIO" ]; then
+        print_success "Recommended audio device: ${RECOMMENDED_AUDIO}"
+    else
+        print_info "Using default ALSA device"
+        RECOMMENDED_AUDIO="default"
     fi
 
     # Summary
@@ -129,12 +211,18 @@ main() {
     echo ""
     echo -e "${GREEN}Quick Start:${NC}"
     echo "  cd ${INSTALL_DIR}"
-    echo "  ./build-pi/poor-house-juno --audio hw:0,0 --midi hw:1,0,0"
+    if [ "$RECOMMENDED_AUDIO" != "default" ]; then
+        echo "  ./build-pi/poor-house-juno --audio ${RECOMMENDED_AUDIO}"
+    else
+        echo "  ./build-pi/poor-house-juno"
+    fi
     echo ""
     echo -e "${GREEN}Useful Commands:${NC}"
     echo "  List MIDI devices:  amidi -l"
     echo "  List audio devices: aplay -l"
-    echo "  Test audio:         speaker-test -D hw:0,0 -c 2"
+    if [ "$RECOMMENDED_AUDIO" != "default" ]; then
+        echo "  Test audio:         speaker-test -D ${RECOMMENDED_AUDIO} -c 2"
+    fi
     echo "  Adjust volume:      alsamixer"
     echo ""
     echo -e "${GREEN}Documentation:${NC}"
@@ -162,7 +250,7 @@ main() {
 
         case "$REPLY" in
             [Yy]|[Yy][Ee][Ss])
-                setup_autostart
+                setup_autostart "$RECOMMENDED_AUDIO"
                 break
                 ;;
             [Nn]|[Nn][Oo])
@@ -180,6 +268,7 @@ main() {
 
 # Setup systemd service for auto-start
 setup_autostart() {
+    local audio_device="$1"
     print_info "Setting up auto-start..."
 
     # Prompt for MIDI device
@@ -193,6 +282,13 @@ setup_autostart() {
     read -r -p "Enter MIDI device (e.g., hw:1,0,0) or press Enter for auto-detect: " MIDI_DEV
     MIDI_DEV=${MIDI_DEV:-hw:1,0,0}
 
+    # Build the command line
+    local exec_cmd="${INSTALL_DIR}/build-pi/poor-house-juno"
+    if [ "$audio_device" != "default" ]; then
+        exec_cmd="${exec_cmd} --audio ${audio_device}"
+    fi
+    exec_cmd="${exec_cmd} --midi ${MIDI_DEV}"
+
     # Create systemd service
     SERVICE_FILE="/tmp/poor-house-juno.service"
     cat > "$SERVICE_FILE" << EOF
@@ -204,7 +300,7 @@ After=sound.target
 Type=simple
 User=${USER}
 WorkingDirectory=${INSTALL_DIR}
-ExecStart=${INSTALL_DIR}/build-pi/poor-house-juno --audio hw:0,0 --midi ${MIDI_DEV}
+ExecStart=${exec_cmd}
 Restart=on-failure
 RestartSec=5
 
