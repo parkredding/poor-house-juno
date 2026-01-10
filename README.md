@@ -24,7 +24,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [~] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison, Documentation, CPU Profiling)
 
 **M15 Progress:**
-- ✅ Unit Test Suite (comprehensive tests for all DSP components)
+- ✅ Unit Test Suite (comprehensive tests for all DSP components including Chorus)
 - ⏳ TAL-U-NO-LX Comparison Tools
 - ⏳ Documentation
 - ⏳ CPU Profiling & Optimization
@@ -212,10 +212,12 @@ make -j$(nproc)
 - ✅ Envelope (ADSR stages, timing accuracy)
 - ✅ LFO (triangle wave, delay feature from M12)
 - ✅ Voice (integration tests, portamento, velocity sensitivity, M13/M14 features)
+- ✅ Chorus (BBD emulation, Mode I/II/Both, stereo output, delay modulation)
 
-**Current Status:** 13/25 tests passing (172/189 assertions)
-- See `TEST_FINDINGS.md` for detailed analysis of failing tests
-- Tests identify specific bugs and provide regression prevention
+**Current Status:** ✅ 32/32 tests passing (237/237 assertions)
+- All DSP components have comprehensive unit test coverage
+- Tests provide regression prevention and verify M11-M14 features
+- See `TEST_FINDINGS.md` for historical analysis
 
 ### Web Interface Testing
 

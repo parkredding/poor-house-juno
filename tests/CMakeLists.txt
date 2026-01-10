@@ -18,6 +18,7 @@ add_executable(phj_tests
     test_envelope.cpp
     test_lfo.cpp
     test_voice.cpp
+    test_chorus.cpp
 )
 
 target_link_libraries(phj_tests PRIVATE
