@@ -178,6 +178,135 @@ void Synth::handleModWheel(float modWheel) {
     performanceParams_.modWheel = clamp(modWheel, 0.0f, 1.0f);
 }
 
+void Synth::handleControlChange(int controller, int value) {
+    // M16: Generic MIDI CC handler for Arturia MiniLab and other controllers
+    // Convert MIDI value (0-127) to normalized 0.0-1.0
+    float normalized = clamp(value / 127.0f, 0.0f, 1.0f);
+
+    switch (controller) {
+        case 1:  // Mod Wheel (also handled by handleModWheel)
+            performanceParams_.modWheel = normalized;
+            break;
+
+        case 64:  // Sustain Pedal
+            handleSustainPedal(value >= 64);  // Threshold at 64 for on/off
+            break;
+
+        case 71:  // Filter Resonance
+            filterParams_.resonance = normalized;
+            setFilterParameters(filterParams_);
+            break;
+
+        case 73:  // Filter Env Amount (bipolar: -1.0 to 1.0)
+            filterParams_.envAmount = (normalized * 2.0f) - 1.0f;
+            setFilterParameters(filterParams_);
+            break;
+
+        case 74:  // Filter Cutoff (primary control)
+            filterParams_.cutoff = normalized;
+            setFilterParameters(filterParams_);
+            break;
+
+        case 75: {  // LFO Rate (0.1 - 30.0 Hz, exponential scaling)
+            // Exponential mapping for musical control
+            float minRate = 0.1f;
+            float maxRate = 30.0f;
+            lfoParams_.rate = minRate * std::pow(maxRate / minRate, normalized);
+            setLfoParameters(lfoParams_);
+            break;
+        }
+
+        case 76: {  // LFO Delay (0.0 - 3.0 seconds)
+            lfoParams_.delay = normalized * 3.0f;
+            setLfoParameters(lfoParams_);
+            break;
+        }
+
+        case 77:  // DCO Pulse Width (0.05 - 0.95)
+            dcoParams_.pulseWidth = 0.05f + (normalized * 0.9f);
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 78:  // DCO PWM Depth (0.0 - 1.0)
+            dcoParams_.pwmDepth = normalized;
+            setDcoParameters(dcoParams_);
+            break;
+
+        case 79:  // Filter Env Attack (0.001 - 3.0 seconds, exponential)
+            filterEnvParams_.attack = 0.001f * std::pow(3000.0f, normalized);
+            setFilterEnvParameters(filterEnvParams_);
+            break;
+
+        case 80:  // Filter Env Decay (0.002 - 12.0 seconds, exponential)
+            filterEnvParams_.decay = 0.002f * std::pow(6000.0f, normalized);
+            setFilterEnvParameters(filterEnvParams_);
+            break;
+
+        case 81:  // Filter Env Sustain (0.0 - 1.0, linear)
+            filterEnvParams_.sustain = normalized;
+            setFilterEnvParameters(filterEnvParams_);
+            break;
+
+        case 82:  // Filter Env Release (0.002 - 12.0 seconds, exponential)
+            filterEnvParams_.release = 0.002f * std::pow(6000.0f, normalized);
+            setFilterEnvParameters(filterEnvParams_);
+            break;
+
+        case 83:  // Amp Env Attack (0.001 - 3.0 seconds, exponential)
+            ampEnvParams_.attack = 0.001f * std::pow(3000.0f, normalized);
+            setAmpEnvParameters(ampEnvParams_);
+            break;
+
+        case 84:  // Amp Env Decay (0.002 - 12.0 seconds, exponential)
+            ampEnvParams_.decay = 0.002f * std::pow(6000.0f, normalized);
+            setAmpEnvParameters(ampEnvParams_);
+            break;
+
+        case 85:  // Amp Env Sustain (0.0 - 1.0, linear)
+            ampEnvParams_.sustain = normalized;
+            setAmpEnvParameters(ampEnvParams_);
+            break;
+
+        case 86:  // Amp Env Release (0.002 - 12.0 seconds, exponential)
+            ampEnvParams_.release = 0.002f * std::pow(6000.0f, normalized);
+            setAmpEnvParameters(ampEnvParams_);
+            break;
+
+        case 91:  // Chorus Mode (0-3 mapped to 4 discrete values)
+            chorusParams_.mode = static_cast<int>(normalized * 3.99f);  // 0, 1, 2, or 3
+            setChorusParameters(chorusParams_);
+            break;
+
+        case 102: {  // Portamento Time (0.0 - 10.0 seconds, exponential)
+            performanceParams_.portamentoTime = normalized * normalized * 10.0f;
+            setPerformanceParameters(performanceParams_);
+            break;
+        }
+
+        case 103: {  // Pitch Bend Range (0 - 12 semitones)
+            performanceParams_.pitchBendRange = normalized * 12.0f;
+            setPerformanceParameters(performanceParams_);
+            break;
+        }
+
+        // Add more CC mappings as needed
+        default:
+            // Unhandled CC - ignore silently
+            break;
+    }
+}
+
+void Synth::handleSustainPedal(bool sustain) {
+    // M16: Sustain pedal handling (CC #64)
+    // Basic implementation - stores state for future use
+    // Full sustain logic will be implemented in Voice class later
+    performanceParams_.sustainPedal = sustain;
+
+    // TODO: Implement full sustain logic in Voice class
+    // - When sustain is on, prevent note-off from releasing voices
+    // - When sustain is released, release all sustained voices
+}
+
 void Synth::processStereo(Sample& leftOut, Sample& rightOut) {
     // Update global LFO (shared by all voices)
     float lfoValue = lfo_.process();
