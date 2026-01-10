@@ -9,6 +9,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstdio>
+#include <fstream>
 #include <alsa/asoundlib.h>
 #include "audio_driver.h"
 #include "midi_driver.h"
@@ -287,22 +288,99 @@ void initializeDefaultParameters(Synth& synth) {
     synth.setPerformanceParameters(performanceParams);
 }
 
+// Load configuration from config file
+struct Config {
+    std::string audioDevice;
+    std::string midiDevice;
+};
+
+Config loadConfig() {
+    Config config;
+    config.audioDevice = "";  // Empty means not set
+    config.midiDevice = "";
+
+    // Try to get HOME directory
+    const char* home = std::getenv("HOME");
+    if (!home) {
+        return config;
+    }
+
+    // Build config file path
+    std::string configPath = std::string(home) + "/.config/poor-house-juno/config";
+    std::ifstream configFile(configPath);
+
+    if (!configFile.is_open()) {
+        return config;  // Config file doesn't exist, use defaults
+    }
+
+    std::string line;
+    while (std::getline(configFile, line)) {
+        // Skip comments and empty lines
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        // Parse KEY=VALUE format
+        size_t pos = line.find('=');
+        if (pos != std::string::npos) {
+            std::string key = line.substr(0, pos);
+            std::string value = line.substr(pos + 1);
+
+            // Trim whitespace
+            key.erase(0, key.find_first_not_of(" \t"));
+            key.erase(key.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+
+            if (key == "AUDIO_DEVICE" && !value.empty()) {
+                config.audioDevice = value;
+            } else if (key == "MIDI_DEVICE" && !value.empty()) {
+                config.midiDevice = value;
+            }
+        }
+    }
+
+    return config;
+}
+
 int main(int argc, char** argv) {
     std::cout << "Poor House Juno - Raspberry Pi Edition" << std::endl;
     std::cout << "=======================================" << std::endl;
     std::cout << "6-Voice Polyphonic Juno-106 Emulator" << std::endl;
     std::cout << "=======================================" << std::endl;
     std::cout << "Usage: poor-house-juno [--audio hw:X,Y,Z] [--midi hw:A,B,C]" << std::endl;
+    std::cout << "       Config file: ~/.config/poor-house-juno/config" << std::endl;
     std::cout << "       Env overrides: PHJ_AUDIO_DEVICE, PHJ_MIDI_DEVICE" << std::endl;
 
-    // Defaults and overrides
+    // Load config file
+    Config config = loadConfig();
+
+    // Defaults and overrides (priority: CLI args > env vars > config file > default)
     std::string audioDevice = "default";
+
+    // First check config file
+    if (!config.audioDevice.empty()) {
+        audioDevice = config.audioDevice;
+    }
+
+    // Environment variable overrides config file
     const char* envAudio = std::getenv("PHJ_AUDIO_DEVICE");
     if (envAudio) {
         audioDevice = envAudio;
     }
 
     std::string midiOverride;
+
+    // Check config file for MIDI device
+    if (!config.midiDevice.empty()) {
+        midiOverride = config.midiDevice;
+    }
+
+    // Environment variable overrides config file
+    const char* envMidi = std::getenv("PHJ_MIDI_DEVICE");
+    if (envMidi) {
+        midiOverride = envMidi;
+    }
 
     // CLI options
     static struct option longOptions[] = {
