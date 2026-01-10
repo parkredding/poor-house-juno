@@ -291,12 +291,14 @@ void initializeDefaultParameters(Synth& synth) {
 // Load configuration from config file
 struct Config {
     std::string audioDevice;
+    std::string audioDeviceName;
     std::string midiDevice;
 };
 
 Config loadConfig() {
     Config config;
     config.audioDevice = "";  // Empty means not set
+    config.audioDeviceName = "";
     config.midiDevice = "";
 
     // Try to get HOME directory
@@ -334,6 +336,8 @@ Config loadConfig() {
 
             if (key == "AUDIO_DEVICE" && !value.empty()) {
                 config.audioDevice = value;
+            } else if (key == "AUDIO_DEVICE_NAME" && !value.empty()) {
+                config.audioDeviceName = value;
             } else if (key == "MIDI_DEVICE" && !value.empty()) {
                 config.midiDevice = value;
             }
@@ -357,16 +361,19 @@ int main(int argc, char** argv) {
 
     // Defaults and overrides (priority: CLI args > env vars > config file > default)
     std::string audioDevice = "default";
+    std::string audioDeviceName = "";
 
     // First check config file
     if (!config.audioDevice.empty()) {
         audioDevice = config.audioDevice;
+        audioDeviceName = config.audioDeviceName;
     }
 
     // Environment variable overrides config file
     const char* envAudio = std::getenv("PHJ_AUDIO_DEVICE");
     if (envAudio) {
         audioDevice = envAudio;
+        audioDeviceName = "";  // Clear name when using env override
     }
 
     std::string midiOverride;
@@ -395,6 +402,7 @@ int main(int argc, char** argv) {
         switch (opt) {
             case 'a':
                 audioDevice = optarg;
+                audioDeviceName = "";  // Clear name when using CLI override
                 break;
             case 'm':
                 midiOverride = optarg;
@@ -418,12 +426,20 @@ int main(int argc, char** argv) {
 
     // Initialize audio driver
     AudioDriver audio;
-    std::cout << "Audio selection: " << audioDevice << std::endl;
+    std::cout << "\n=======================================" << std::endl;
+    std::cout << "Initializing Audio" << std::endl;
+    std::cout << "=======================================" << std::endl;
+    if (!audioDeviceName.empty()) {
+        std::cout << "Selected device: " << audioDevice << " (" << audioDeviceName << ")" << std::endl;
+    } else {
+        std::cout << "Selected device: " << audioDevice << std::endl;
+    }
     if (!audio.initialize(audioDevice, 48000, 128)) {
-        std::cerr << "Failed to initialize audio device '" << audioDevice << "'" << std::endl;
+        std::cerr << "\n[ERROR] Failed to initialize audio device '" << audioDevice << "'" << std::endl;
         std::cerr << "Run 'aplay -l' to list devices; try --audio hw:0,0 or set PHJ_AUDIO_DEVICE." << std::endl;
         return 1;
     }
+    std::cout << "Audio device initialized successfully" << std::endl;
 
     audio.setCallback(audioCallback, &g_synth);
 
@@ -444,25 +460,38 @@ int main(int argc, char** argv) {
         midiDevice = chooseMidiDevice();
     }
 
-    std::cout << "MIDI selection: " << midiDevice.hwId
-              << " (" << midiDevice.cardName << " - " << midiDevice.deviceName << ")"
-              << (midiDevice.isGadget ? " [USB gadget / DAW]" : " [controller/standalone]")
-              << std::endl;
+    std::cout << "\n=======================================" << std::endl;
+    std::cout << "Initializing MIDI" << std::endl;
+    std::cout << "=======================================" << std::endl;
+    std::cout << "Selected device: " << midiDevice.hwId << std::endl;
+    std::cout << "Device name:     " << midiDevice.cardName << " - " << midiDevice.deviceName << std::endl;
+    std::cout << "Device type:     " << (midiDevice.isGadget ? "USB gadget / DAW" : "Controller/Standalone") << std::endl;
 
     if (!midi.initialize(midiDevice.hwId)) {
-        std::cerr << "Failed to initialize MIDI device " << midiDevice.hwId
+        std::cerr << "[WARNING] Failed to initialize MIDI device " << midiDevice.hwId
                   << " (this is optional)" << std::endl;
         // Continue without MIDI
     } else {
         midi.setCallback(midiCallback, &g_synth);
         if (!midi.start()) {
-            std::cerr << "Failed to start MIDI" << std::endl;
+            std::cerr << "[WARNING] Failed to start MIDI" << std::endl;
+        } else {
+            std::cout << "MIDI device initialized successfully" << std::endl;
         }
     }
 
-    std::cout << "\nAudio running at " << audio.getSampleRate() << " Hz" << std::endl;
-    std::cout << "Buffer size: " << audio.getBufferSize() << " samples" << std::endl;
-    std::cout << "Latency: ~" << (audio.getBufferSize() * 1000.0f / audio.getSampleRate()) << " ms" << std::endl;
+    std::cout << "\n=======================================" << std::endl;
+    std::cout << "System Ready" << std::endl;
+    std::cout << "=======================================" << std::endl;
+    if (!audioDeviceName.empty()) {
+        std::cout << "Audio device:    " << audioDevice << " (" << audioDeviceName << ")" << std::endl;
+    } else {
+        std::cout << "Audio device:    " << audioDevice << std::endl;
+    }
+    std::cout << "Sample rate:     " << audio.getSampleRate() << " Hz" << std::endl;
+    std::cout << "Buffer size:     " << audio.getBufferSize() << " samples" << std::endl;
+    std::cout << "Latency:         ~" << (audio.getBufferSize() * 1000.0f / audio.getSampleRate()) << " ms" << std::endl;
+    std::cout << "\nMIDI device:     " << midiDevice.hwId << std::endl;
     std::cout << "\nFeatures:" << std::endl;
     std::cout << "  - 6-voice polyphony with voice stealing" << std::endl;
     std::cout << "  - BBD stereo chorus effect" << std::endl;

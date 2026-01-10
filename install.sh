@@ -66,23 +66,23 @@ detect_audio_device() {
             local hw_id="hw:${card},${device}"
 
             # Test if device works with stereo playback
-            print_info "Testing ${hw_id} (${card_name})..."
+            print_info "Testing ${hw_id} (${card_name})..." >&2
 
             # Quick test: try to open device with speaker-test
             # Use timeout to limit test duration, and -l 1 for just one iteration
-            # Increased timeout to 3 seconds for devices that need longer initialization (like bcm2835)
+            # Increased timeout to 5 seconds for devices that need longer initialization (like bcm2835)
             local test_passed=false
 
-            # First attempt: Standard test with 3 second timeout
-            if timeout 3 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+            # First attempt: Standard test with 5 second timeout
+            if timeout 5 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
                 test_passed=true
             # Second attempt for bcm2835 devices: Try with different parameters
-            elif [[ $card_name =~ (bcm2835|Headphones) ]] && timeout 3 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
+            elif [[ $card_name =~ (bcm2835|Headphones) ]] && timeout 5 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
                 test_passed=true
             # Third attempt: bcm2835/Headphones devices often work even if speaker-test is finicky
             # We'll trust them and let the actual app test fail if there's a real issue
             elif [[ $card_name =~ (bcm2835|Headphones|Analog) ]]; then
-                print_info "  ${hw_id} detection uncertain, but bcm2835/analog devices usually work"
+                print_info "  ${hw_id} detection uncertain, but bcm2835/analog devices usually work" >&2
                 test_passed=true
             fi
 
@@ -107,7 +107,7 @@ detect_audio_device() {
                     description="HDMI"
                 fi
 
-                print_success "  ${hw_id} works (${description})"
+                print_success "  ${hw_id} works (${description})" >&2
 
                 # Keep track of best device
                 if [ $score -gt $best_score ]; then
@@ -115,7 +115,7 @@ detect_audio_device() {
                     best_device=$hw_id
                 fi
             else
-                print_info "  ${hw_id} not compatible"
+                print_info "  ${hw_id} not compatible" >&2
             fi
         fi
     done < <(aplay -l 2>/dev/null)
@@ -245,6 +245,8 @@ main() {
 
     # Prompt user to select or confirm audio device
     SELECTED_AUDIO="$RECOMMENDED_AUDIO"
+    SELECTED_AUDIO_NAME=""
+
     if [ $device_count -gt 0 ]; then
         echo ""
         echo "Available audio devices:"
@@ -259,26 +261,55 @@ main() {
         echo ""
 
         # Interactive selection with validation
-        while true; do
-            read -r -p "Select audio device (1-$((device_count+1))) or press Enter for recommended [${RECOMMENDED_AUDIO}]: " AUDIO_CHOICE
+        # Check if we have access to /dev/tty for interactive input
+        if [ -r /dev/tty ]; then
+            read_target="/dev/tty"
+        else
+            # No interactive terminal, use recommended device
+            print_info "No interactive terminal detected, using recommended device: ${RECOMMENDED_AUDIO}"
+            SELECTED_AUDIO="$RECOMMENDED_AUDIO"
+            read_target=""
+        fi
 
-            if [ -z "$AUDIO_CHOICE" ]; then
-                SELECTED_AUDIO="$RECOMMENDED_AUDIO"
-                break
-            elif [[ "$AUDIO_CHOICE" =~ ^[0-9]+$ ]] && [ "$AUDIO_CHOICE" -ge 1 ] && [ "$AUDIO_CHOICE" -le $((device_count+1)) ]; then
-                if [ "$AUDIO_CHOICE" -eq $((device_count+1)) ]; then
-                    SELECTED_AUDIO="default"
+        if [ -n "$read_target" ]; then
+            while true; do
+                read -r -p "Select audio device (1-$((device_count+1))) or press Enter for recommended [${RECOMMENDED_AUDIO}]: " AUDIO_CHOICE < "$read_target"
+
+                if [ -z "$AUDIO_CHOICE" ]; then
+                    SELECTED_AUDIO="$RECOMMENDED_AUDIO"
+                    break
+                elif [[ "$AUDIO_CHOICE" =~ ^[0-9]+$ ]] && [ "$AUDIO_CHOICE" -ge 1 ] && [ "$AUDIO_CHOICE" -le $((device_count+1)) ]; then
+                    if [ "$AUDIO_CHOICE" -eq $((device_count+1)) ]; then
+                        SELECTED_AUDIO="default"
+                    else
+                        SELECTED_AUDIO="${AUDIO_DEVICES[$((AUDIO_CHOICE-1))]}"
+                    fi
+                    break
                 else
-                    SELECTED_AUDIO="${AUDIO_DEVICES[$((AUDIO_CHOICE-1))]}"
+                    echo "Invalid selection. Please enter a number between 1 and $((device_count+1))."
                 fi
+            done
+        fi
+
+        # Find the friendly name for the selected device
+        for i in "${!AUDIO_DEVICES[@]}"; do
+            if [ "${AUDIO_DEVICES[$i]}" = "$SELECTED_AUDIO" ]; then
+                SELECTED_AUDIO_NAME="${AUDIO_DESCRIPTIONS[$i]}"
                 break
-            else
-                echo "Invalid selection. Please enter a number between 1 and $((device_count+1))."
             fi
         done
-
-        print_success "Selected audio device: ${SELECTED_AUDIO}"
     fi
+
+    # Default friendly name if not found
+    if [ -z "$SELECTED_AUDIO_NAME" ]; then
+        if [ "$SELECTED_AUDIO" = "default" ]; then
+            SELECTED_AUDIO_NAME="ALSA default"
+        else
+            SELECTED_AUDIO_NAME="Unknown device"
+        fi
+    fi
+
+    print_success "Selected audio device: ${SELECTED_AUDIO} (${SELECTED_AUDIO_NAME})"
 
     # Save configuration
     CONFIG_DIR="${HOME}/.config/poor-house-juno"
@@ -292,11 +323,20 @@ main() {
 # Audio device (e.g., hw:2,0 or default)
 AUDIO_DEVICE=${SELECTED_AUDIO}
 
+# Friendly name for audio device (e.g., "bcm2835 Headphones" or "PCM5102")
+AUDIO_DEVICE_NAME=${SELECTED_AUDIO_NAME}
+
 # MIDI device (e.g., hw:1,0,0 or default)
 # Leave empty for auto-detection
 MIDI_DEVICE=
 EOF
-    print_success "Configuration saved to ${CONFIG_FILE}"
+    echo ""
+    print_header "Configuration Saved"
+    echo ""
+    echo "Audio Device: ${SELECTED_AUDIO} (${SELECTED_AUDIO_NAME})"
+    echo "Config File:  ${CONFIG_FILE}"
+    echo ""
+    print_success "Configuration saved successfully"
 
     # Summary
     echo ""
