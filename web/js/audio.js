@@ -25,14 +25,16 @@ export class AudioEngine {
 
         // Load and register AudioWorklet
         try {
+            console.log('Loading AudioWorklet module: audio_worklet.js');
             await this.audioContext.audioWorklet.addModule('audio_worklet.js');
             console.log('AudioWorklet module loaded');
         } catch (error) {
             console.error('Failed to load AudioWorklet:', error);
-            throw new Error('AudioWorklet not supported or failed to load');
+            throw new Error('AudioWorklet not supported or failed to load: ' + error.message);
         }
 
         // Create worklet node
+        console.log('Creating AudioWorkletNode: synth-processor');
         this.workletNode = new AudioWorkletNode(this.audioContext, 'synth-processor', {
             numberOfInputs: 0,
             numberOfOutputs: 1,
@@ -46,21 +48,38 @@ export class AudioEngine {
         // Connect: worklet -> analyser -> destination
         this.workletNode.connect(this.analyser);
         this.analyser.connect(this.audioContext.destination);
+        console.log('Audio nodes connected');
 
         // Setup message handler
-        this.workletNode.port.onmessage = (event) => {
-            this.handleWorkletMessage(event.data);
-        };
+        return new Promise((resolve, reject) => {
+            const initTimeout = setTimeout(() => {
+                reject(new Error('WASM initialization timed out (10s)'));
+            }, 10000);
 
-        // Initialize WASM in worklet
-        this.workletNode.port.postMessage({
-            type: 'init',
-            data: {}
+            this.workletNode.port.onmessage = (event) => {
+                const { type, error } = event.data;
+                
+                if (type === 'initialized') {
+                    clearTimeout(initTimeout);
+                    console.log('WASM synth initialized successfully');
+                    this.initialized = true;
+                    resolve();
+                } else if (type === 'error') {
+                    clearTimeout(initTimeout);
+                    console.error('Worklet reported error:', error);
+                    reject(new Error(error));
+                }
+
+                this.handleWorkletMessage(event.data);
+            };
+
+            // Initialize WASM in worklet
+            console.log('Sending init message to worklet');
+            this.workletNode.port.postMessage({
+                type: 'init',
+                data: {}
+            });
         });
-
-        this.initialized = true;
-
-        console.log('Audio engine initialized');
     }
 
     handleWorkletMessage(message) {

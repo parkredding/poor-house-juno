@@ -366,6 +366,7 @@ class App {
         } catch (error) {
             console.error('Failed to start audio:', error);
             this.ui.setStatus(`Error: ${error.message}`);
+            alert('Failed to start audio engine. Check console (F12) for details.\n\nError: ' + error.message);
         }
     }
 

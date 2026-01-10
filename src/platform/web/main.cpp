@@ -296,6 +296,12 @@ public:
         synth_.setPerformanceParameters(performanceParams_);
     }
 
+    // M16: Voice Allocation Mode
+    void setVoiceAllocationMode(int mode) {
+        performanceParams_.voiceAllocationMode = mode;
+        synth_.setPerformanceParameters(performanceParams_);
+    }
+
     // Legacy interface for compatibility (deprecated, but kept for backward compat)
     void setFrequency(float freq) {
         // No-op in new architecture - use handleMidi instead
@@ -376,6 +382,7 @@ EMSCRIPTEN_BINDINGS(synth_module) {
         .function("setMasterTune", &WebSynth::setMasterTune)
         .function("setVelocityToFilter", &WebSynth::setVelocityToFilter)
         .function("setVelocityToAmp", &WebSynth::setVelocityToAmp)
+        .function("setVoiceAllocationMode", &WebSynth::setVoiceAllocationMode)
 
         // Legacy
         .function("setFrequency", &WebSynth::setFrequency)

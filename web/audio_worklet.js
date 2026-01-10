@@ -211,20 +211,25 @@ class SynthProcessor extends AudioWorkletProcessor {
 
     async initWasm(moduleData) {
         try {
+            console.log('AudioWorklet: Loading WASM module...');
             // Load WASM module
             const Module = await import('./synth-processor.js');
+            console.log('AudioWorklet: WASM script loaded, initializing...');
             wasmModule = await Module.default();
+            console.log('AudioWorklet: WASM module initialized');
 
             // Create synth instance
             synthInstance = new wasmModule.WebSynth(sampleRate);
+            console.log('AudioWorklet: Synth instance created, sampleRate:', sampleRate);
 
             // Allocate buffers in WASM heap
             this.leftPtr = wasmModule._malloc(this.bufferSize * 4);  // 4 bytes per float
             this.rightPtr = wasmModule._malloc(this.bufferSize * 4);
+            console.log('AudioWorklet: Memory allocated in WASM heap');
 
             this.port.postMessage({ type: 'initialized' });
         } catch (error) {
-            console.error('Failed to initialize WASM:', error);
+            console.error('AudioWorklet: Failed to initialize WASM:', error);
             this.port.postMessage({ type: 'error', error: error.message });
         }
     }
