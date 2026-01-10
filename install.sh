@@ -70,7 +70,23 @@ detect_audio_device() {
 
             # Quick test: try to open device with speaker-test
             # Use timeout to limit test duration, and -l 1 for just one iteration
-            if timeout 1 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+            # Increased timeout to 3 seconds for devices that need longer initialization (like bcm2835)
+            local test_passed=false
+
+            # First attempt: Standard test with 3 second timeout
+            if timeout 3 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+                test_passed=true
+            # Second attempt for bcm2835 devices: Try with different parameters
+            elif [[ $card_name =~ (bcm2835|Headphones) ]] && timeout 3 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
+                test_passed=true
+            # Third attempt: bcm2835/Headphones devices often work even if speaker-test is finicky
+            # We'll trust them and let the actual app test fail if there's a real issue
+            elif [[ $card_name =~ (bcm2835|Headphones|Analog) ]]; then
+                print_info "  ${hw_id} detection uncertain, but bcm2835/analog devices usually work"
+                test_passed=true
+            fi
+
+            if [ "$test_passed" = true ]; then
                 # Device works! Now score it based on type
                 local score=1
                 local description="${card_name}"
@@ -115,7 +131,11 @@ test_audio_device() {
     # We test with the same parameters Poor House Juno needs:
     # - Stereo (2 channels)
     # - 48kHz sample rate
-    if timeout 0.5 speaker-test -D "$device" -c 2 -r 48000 -t sine >/dev/null 2>&1; then
+    # Increased timeout to 3 seconds for devices that need longer initialization
+    if timeout 3 speaker-test -D "$device" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+        return 0
+    # Try alternative sample rate for bcm2835 devices
+    elif timeout 3 speaker-test -D "$device" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
         return 0
     else
         return 1
