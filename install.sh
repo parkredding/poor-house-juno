@@ -74,10 +74,10 @@ detect_audio_device() {
             local test_passed=false
 
             # First attempt: Standard test with 5 second timeout
-            if timeout 5 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+            if timeout 5 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 </dev/null >/dev/null 2>&1; then
                 test_passed=true
             # Second attempt for bcm2835 devices: Try with different parameters
-            elif [[ $card_name =~ (bcm2835|Headphones) ]] && timeout 5 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
+            elif [[ $card_name =~ (bcm2835|Headphones) ]] && timeout 5 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 </dev/null >/dev/null 2>&1; then
                 test_passed=true
             # Third attempt: bcm2835/Headphones devices often work even if speaker-test is finicky
             # We'll trust them and let the actual app test fail if there's a real issue
@@ -132,10 +132,10 @@ test_audio_device() {
     # - Stereo (2 channels)
     # - 48kHz sample rate
     # Increased timeout to 3 seconds for devices that need longer initialization
-    if timeout 3 speaker-test -D "$device" -c 2 -r 48000 -t sine -l 1 >/dev/null 2>&1; then
+    if timeout 3 speaker-test -D "$device" -c 2 -r 48000 -t sine -l 1 </dev/null >/dev/null 2>&1; then
         return 0
     # Try alternative sample rate for bcm2835 devices
-    elif timeout 3 speaker-test -D "$device" -c 2 -r 44100 -t sine -l 1 >/dev/null 2>&1; then
+    elif timeout 3 speaker-test -D "$device" -c 2 -r 44100 -t sine -l 1 </dev/null >/dev/null 2>&1; then
         return 0
     else
         return 1
