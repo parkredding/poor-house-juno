@@ -146,30 +146,33 @@ main() {
     echo -e "${YELLOW}Optional:${NC} Set up auto-start on boot?"
 
     # Robust prompt: accept y/yes/n/no and keep asking until answered.
-    # Use /dev/tty so it works even when the script is piped in (stdin not a TTY).
-    if [ -r /dev/tty ]; then
-        while true; do
-            if ! read -r -p "Configure Poor House Juno to start automatically? (y/n) " REPLY < /dev/tty; then
-                echo "No interactive TTY available; skipping auto-start setup."
-                break
-            fi
+    # Tries /dev/tty first (works when piped), falls back to stdin if needed.
+    # If neither is available, we skip but tell the user explicitly.
+    while true; do
+        if [ -r /dev/tty ]; then
+            read_target="/dev/tty"
+        else
+            read_target="/dev/stdin"
+        fi
 
-            case "$REPLY" in
-                [Yy]|[Yy][Ee][Ss])
-                    setup_autostart
-                    break
-                    ;;
-                [Nn]|[Nn][Oo])
-                    break
-                    ;;
-                *)
-                    echo "Please answer y or n."
-                    ;;
-            esac
-        done
-    else
-        echo "No interactive TTY available; skipping auto-start setup."
-    fi
+        if ! read -r -p "Configure Poor House Juno to start automatically? (y/n) " REPLY < "$read_target"; then
+            echo "No interactive input available; skipping auto-start setup."
+            break
+        fi
+
+        case "$REPLY" in
+            [Yy]|[Yy][Ee][Ss])
+                setup_autostart
+                break
+                ;;
+            [Nn]|[Nn][Oo])
+                break
+                ;;
+            *)
+                echo "Please answer y or n."
+                ;;
+        esac
+    done
 
     echo ""
     print_header "Ready to Rock! 🎹"
