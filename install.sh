@@ -185,7 +185,10 @@ setup_autostart() {
     # Prompt for MIDI device
     echo ""
     echo "Available MIDI devices:"
-    amidi -l || true
+    # Avoid noisy stderr when no devices/permissions; still give a helpful hint.
+    if ! amidi -l 2>/dev/null; then
+        echo "  (Could not list MIDI devices. If one is connected, ensure you have raw MIDI permissions, typically by being in the 'audio' group.)"
+    fi
     echo ""
     read -r -p "Enter MIDI device (e.g., hw:1,0,0) or press Enter for auto-detect: " MIDI_DEV
     MIDI_DEV=${MIDI_DEV:-hw:1,0,0}
