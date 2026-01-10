@@ -127,10 +127,10 @@ TEST_CASE("Filter basic functionality", "[filter]") {
         filter.process(input.data(), output.data(), 100);
 
         // Output should start fresh (not influenced by previous state)
-        // This is hard to verify precisely, but we can check it produces output
+        // Check that filter produces output (4-pole filter has small initial response)
         bool hasOutput = false;
-        for (size_t i = 0; i < 10; ++i) {
-            if (std::abs(output[i]) > 0.01f) {
+        for (size_t i = 0; i < 20; ++i) {
+            if (std::abs(output[i]) > 0.001f) {
                 hasOutput = true;
                 break;
             }
