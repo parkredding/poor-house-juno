@@ -253,6 +253,38 @@ export class AudioEngine {
         this.workletNode.port.postMessage({ type: 'setFilterEnvPolarity', data: polarity });
     }
 
+    // M14: Range & Voice Control parameter methods
+    setDcoRange(range) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setDcoRange', data: range });
+    }
+
+    setVcaLevel(level) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVcaLevel', data: level });
+    }
+
+    setMasterTune(cents) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setMasterTune', data: cents });
+    }
+
+    setVelocityToFilter(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVelocityToFilter', data: amount });
+    }
+
+    setVelocityToAmp(amount) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVelocityToAmp', data: amount });
+    }
+
+    // M16: Voice Allocation Mode
+    setVoiceAllocationMode(mode) {
+        if (!this.initialized || !this.workletNode) return;
+        this.workletNode.port.postMessage({ type: 'setVoiceAllocationMode', data: mode });
+    }
+
     // Legacy methods (for compatibility)
     setFrequency(freq) {
         if (!this.initialized || !this.workletNode) return;

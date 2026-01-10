@@ -4,7 +4,7 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 
 ## Project Status
 
-**Current Milestone:** M16 - Final Refinement (In Progress)
+**Current Milestone:** M16 - Final Refinement (✅ Complete)
 
 **Completed Milestones:**
 - [x] **M1:** Project Setup (repository, build system, basic audio)
@@ -22,18 +22,20 @@ A standalone Roland Juno-106 synthesizer emulator for Raspberry Pi 4, reverse-en
 - [x] **M13:** Performance Controls (Mod Wheel, VCA Mode, Filter Envelope Polarity)
 - [x] **M14:** Range & Voice Control (DCO Range, VCA Level, Velocity Sensitivity, Master Tune)
 - [x] **M15:** Polish & Optimization (Unit Tests ✅, TAL Comparison Tools ✅)
-- [~] **M16:** Final Refinement (Full MIDI CC Mapping ✅, Sustain Pedal ✅, Voice Allocation Modes ✅, 128-Patch Banks pending)
+- [x] **M16:** Final Refinement (Full MIDI CC Mapping ✅, Sustain Pedal ✅, Voice Allocation Modes ✅, Web UI ✅)
 
 **M16 Progress:**
 - ✅ Comprehensive MIDI CC Mapping (29 CCs for all synth parameters)
 - ✅ Sustain Pedal Support (MIDI CC #64 with voice sustain logic)
 - ✅ Voice Allocation Priority Modes (Oldest, Newest, Low-Note, High-Note)
-- ⏳ 128-Patch Bank System (deferred)
-- ⏳ Web UI Updates for new features
+- ✅ Web UI Updates for M14 and M16 features
+- ⏳ 128-Patch Bank System (deferred to future milestone)
 
 **Next Steps:**
-- M16: Update web UI controls for voice allocation mode
-- Future: Complete 128-patch bank system
+- Hardware build and testing (see HARDWARE_BUILD_PUNCHLIST.md)
+- CPU profiling and optimization on Raspberry Pi 4
+- Documentation completion (architecture, DSP design, etc.)
+- Future: Complete 128-patch bank system (optional enhancement)
 
 ## Overview
 
@@ -377,7 +379,7 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
 - CPU profiling and optimization for Pi 4 (<50% target)
 - Complete documentation (architecture, DSP design, Juno-106 analysis)
 
-**M16: Final Refinement** ✅ (Core features completed)
+**M16: Final Refinement** ✅ (Complete)
 - ✅ Full MIDI CC mapping for all synth parameters (29 CCs)
   - CC #1: Mod Wheel
   - CC #14-17: DCO waveform levels (Saw, Pulse, Sub, Noise)
@@ -398,8 +400,9 @@ See [docs/architecture.md](docs/architecture.md) (planned) for detailed roadmap.
   - CC #102-103: Portamento Time, Pitch Bend Range
 - ✅ Sustain pedal support (MIDI CC #64) with full voice sustain logic
 - ✅ Voice allocation priority modes: Oldest (default), Newest, Low-Note Priority, High-Note Priority
+- ✅ Web UI controls for voice allocation mode and all M14/M16 features
+- ✅ Preset system updated to include M14 and M16 parameters
 - ⏳ 128-patch bank system (deferred to future milestone)
-- ⏳ Web UI updates for voice allocation mode
 
 **Total Estimated Time:** 40-55 hours remaining (M14 completed)
 

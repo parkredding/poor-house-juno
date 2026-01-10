@@ -138,7 +138,7 @@
 
             <!-- M11/M13/M14: Performance Controls -->
             <div class="section">
-                <h2>Performance (M11/M13/M14)</h2>
+                <h2>Performance (M11/M13/M14/M16)</h2>
                 <div class="controls">
                     <div class="control">
                         <label for="pitch-bend-range">Pitch Bend Range (semitones)</label>
@@ -192,6 +192,15 @@
                         <label for="velocity-to-amp">Velocity → Amp (M14)</label>
                         <input type="range" id="velocity-to-amp" min="0" max="100" value="100" step="1">
                         <span id="velocity-to-amp-value">100%</span>
+                    </div>
+                    <div class="control">
+                        <label for="voice-allocation-mode">Voice Allocation (M16)</label>
+                        <select id="voice-allocation-mode">
+                            <option value="0">Oldest (Default)</option>
+                            <option value="1">Newest (Last-Note)</option>
+                            <option value="2">Low-Note Priority</option>
+                            <option value="3">High-Note Priority</option>
+                        </select>
                     </div>
                 </div>
             </div>

@@ -65,7 +65,13 @@ export class PresetManager {
             ampEnvRelease: 0.3,
             chorusMode: 0,
             vcaMode: 0,  // M13: ENV mode
-            filterEnvPolarity: 0  // M13: Normal polarity
+            filterEnvPolarity: 0,  // M13: Normal polarity
+            dcoRange: 1,  // M14: 8' (normal pitch)
+            vcaLevel: 0.8,  // M14: 80%
+            masterTune: 0,  // M14: 0 cents
+            velocityToFilter: 0,  // M14: 0%
+            velocityToAmp: 1.0,  // M14: 100%
+            voiceAllocationMode: 0  // M16: Oldest (default)
         };
     }
 
@@ -96,7 +102,13 @@ export class PresetManager {
             ampEnvRelease: 0.4,
             chorusMode: 2,
             vcaMode: 0,  // M13: ENV mode
-            filterEnvPolarity: 0  // M13: Normal polarity
+            filterEnvPolarity: 0,  // M13: Normal polarity
+            dcoRange: 1,  // M14: 8' (normal pitch)
+            vcaLevel: 0.8,  // M14: 80%
+            masterTune: 0,  // M14: 0 cents
+            velocityToFilter: 0,  // M14: 0%
+            velocityToAmp: 1.0,  // M14: 100%
+            voiceAllocationMode: 0  // M16: Oldest (default)
         };
     }
 
@@ -127,7 +139,13 @@ export class PresetManager {
             ampEnvRelease: 0.1,
             chorusMode: 0,
             vcaMode: 0,  // M13: ENV mode
-            filterEnvPolarity: 0  // M13: Normal polarity
+            filterEnvPolarity: 0,  // M13: Normal polarity
+            dcoRange: 1,  // M14: 8' (normal pitch)
+            vcaLevel: 0.85,  // M14: 85% (slightly higher for bass)
+            masterTune: 0,  // M14: 0 cents
+            velocityToFilter: 0.2,  // M14: 20% (some velocity sensitivity)
+            velocityToAmp: 0.9,  // M14: 90% (strong velocity response)
+            voiceAllocationMode: 2  // M16: Low-Note Priority (protect bass notes)
         };
     }
 
@@ -158,7 +176,13 @@ export class PresetManager {
             ampEnvRelease: 2.0,
             chorusMode: 3,
             vcaMode: 0,  // M13: ENV mode
-            filterEnvPolarity: 0  // M13: Normal polarity
+            filterEnvPolarity: 0,  // M13: Normal polarity
+            dcoRange: 1,  // M14: 8' (normal pitch)
+            vcaLevel: 0.75,  // M14: 75% (slightly lower for pad)
+            masterTune: 0,  // M14: 0 cents
+            velocityToFilter: 0.15,  // M14: 15% (subtle filter response)
+            velocityToAmp: 0.7,  // M14: 70% (soft velocity response)
+            voiceAllocationMode: 0  // M16: Oldest (default)
         };
     }
 
@@ -189,7 +213,13 @@ export class PresetManager {
             ampEnvRelease: 0.1,
             chorusMode: 1,
             vcaMode: 0,  // M13: ENV mode
-            filterEnvPolarity: 0  // M13: Normal polarity
+            filterEnvPolarity: 0,  // M13: Normal polarity
+            dcoRange: 1,  // M14: 8' (normal pitch)
+            vcaLevel: 0.9,  // M14: 90% (higher for lead)
+            masterTune: 0,  // M14: 0 cents
+            velocityToFilter: 0.3,  // M14: 30% (moderate filter response)
+            velocityToAmp: 1.0,  // M14: 100% (full velocity response)
+            voiceAllocationMode: 3  // M16: High-Note Priority (protect lead notes)
         };
     }
 
@@ -266,6 +296,16 @@ export class PresetManager {
         // M13: Performance parameters (VCA mode and Filter Env Polarity are preset parameters)
         params.vcaMode = parseInt(document.getElementById('vca-mode').value);
         params.filterEnvPolarity = parseInt(document.getElementById('filter-env-polarity').value);
+
+        // M14: Range & Voice Control parameters
+        params.dcoRange = parseInt(document.getElementById('dco-range').value);
+        params.vcaLevel = parseFloat(document.getElementById('vca-level').value) / 100;
+        params.masterTune = parseFloat(document.getElementById('master-tune').value);
+        params.velocityToFilter = parseFloat(document.getElementById('velocity-to-filter').value) / 100;
+        params.velocityToAmp = parseFloat(document.getElementById('velocity-to-amp').value) / 100;
+
+        // M16: Voice Allocation Mode
+        params.voiceAllocationMode = parseInt(document.getElementById('voice-allocation-mode').value);
 
         this.currentParameters = params;
         return params;
@@ -352,6 +392,32 @@ export class PresetManager {
         }
         if (parameters.filterEnvPolarity !== undefined) {
             document.getElementById('filter-env-polarity').value = parameters.filterEnvPolarity;
+        }
+
+        // M14: Range & Voice Control parameters (with defaults if not present)
+        if (parameters.dcoRange !== undefined) {
+            document.getElementById('dco-range').value = parameters.dcoRange;
+        }
+        if (parameters.vcaLevel !== undefined) {
+            document.getElementById('vca-level').value = parameters.vcaLevel * 100;
+            document.getElementById('vca-level-value').textContent = `${Math.round(parameters.vcaLevel * 100)}%`;
+        }
+        if (parameters.masterTune !== undefined) {
+            document.getElementById('master-tune').value = parameters.masterTune;
+            document.getElementById('master-tune-value').textContent = `${parameters.masterTune}`;
+        }
+        if (parameters.velocityToFilter !== undefined) {
+            document.getElementById('velocity-to-filter').value = parameters.velocityToFilter * 100;
+            document.getElementById('velocity-to-filter-value').textContent = `${Math.round(parameters.velocityToFilter * 100)}%`;
+        }
+        if (parameters.velocityToAmp !== undefined) {
+            document.getElementById('velocity-to-amp').value = parameters.velocityToAmp * 100;
+            document.getElementById('velocity-to-amp-value').textContent = `${Math.round(parameters.velocityToAmp * 100)}%`;
+        }
+
+        // M16: Voice Allocation Mode (with default if not present)
+        if (parameters.voiceAllocationMode !== undefined) {
+            document.getElementById('voice-allocation-mode').value = parameters.voiceAllocationMode;
         }
 
         return parameters;

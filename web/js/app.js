@@ -233,6 +233,12 @@ class App {
             if (this.audioEngine) this.audioEngine.setVelocityToAmp(value);
         });
 
+        // M16: Voice Allocation Mode
+        document.getElementById('voice-allocation-mode').addEventListener('change', (e) => {
+            const value = parseInt(e.target.value);
+            if (this.audioEngine) this.audioEngine.setVoiceAllocationMode(value);
+        });
+
         // Filter envelope controls
         document.getElementById('filter-env-attack').addEventListener('input', (e) => {
             const value = parseFloat(e.target.value) / 1000;  // Convert ms to seconds
@@ -598,6 +604,36 @@ class App {
 
         // Chorus
         this.audioEngine.setChorusMode(params.chorusMode);
+
+        // M13: Performance Controls
+        if (params.vcaMode !== undefined) {
+            this.audioEngine.setVcaMode(params.vcaMode);
+        }
+        if (params.filterEnvPolarity !== undefined) {
+            this.audioEngine.setFilterEnvPolarity(params.filterEnvPolarity);
+        }
+
+        // M14: Range & Voice Control
+        if (params.dcoRange !== undefined) {
+            this.audioEngine.setDcoRange(params.dcoRange);
+        }
+        if (params.vcaLevel !== undefined) {
+            this.audioEngine.setVcaLevel(params.vcaLevel);
+        }
+        if (params.masterTune !== undefined) {
+            this.audioEngine.setMasterTune(params.masterTune);
+        }
+        if (params.velocityToFilter !== undefined) {
+            this.audioEngine.setVelocityToFilter(params.velocityToFilter);
+        }
+        if (params.velocityToAmp !== undefined) {
+            this.audioEngine.setVelocityToAmp(params.velocityToAmp);
+        }
+
+        // M16: Voice Allocation Mode
+        if (params.voiceAllocationMode !== undefined) {
+            this.audioEngine.setVoiceAllocationMode(params.voiceAllocationMode);
+        }
     }
 
     startCpuMonitoring() {
