@@ -18,6 +18,10 @@ Filter::Filter()
     , k_(0.0f)
     , hpfState_(0.0f)
     , hpfG_(0.0f)
+    , cachedEnvValue_(0.0f)  // M15: Initialize cache
+    , cachedLfoValue_(0.0f)
+    , cachedVelocityValue_(1.0f)
+    , coefficientsNeedUpdate_(true)
 {
     updateCoefficients();
 }
@@ -29,6 +33,7 @@ void Filter::setSampleRate(float sampleRate) {
 
 void Filter::setParameters(const FilterParams& params) {
     params_ = params;
+    coefficientsNeedUpdate_ = true;  // M15: Mark for update
     updateCoefficients();
 }
 
@@ -61,8 +66,8 @@ void Filter::reset() {
 }
 
 Sample Filter::process(Sample input) {
-    // Update coefficients to apply modulation (envelope, LFO, velocity, key tracking)
-    updateCoefficients();
+    // M15: Update coefficients only when modulation values change
+    updateCoefficientsIfNeeded();
 
     // M11: Apply HPF first (if enabled)
     if (params_.hpfMode > 0) {
@@ -131,6 +136,26 @@ void Filter::updateCoefficients() {
         float hpfCutoff = 30.0f * std::pow(2.0f, params_.hpfMode - 1);  // 30, 60, 120 Hz
         float hpfWc = TWO_PI * hpfCutoff / sampleRate_;
         hpfG_ = std::tan(hpfWc * 0.5f);
+    }
+
+    // M15: Update cache values
+    cachedEnvValue_ = envValue_;
+    cachedLfoValue_ = lfoValue_;
+    cachedVelocityValue_ = velocityValue_;
+    coefficientsNeedUpdate_ = false;
+}
+
+void Filter::updateCoefficientsIfNeeded() {
+    // M15: Performance optimization - only update when modulation values change
+    // This avoids expensive trig/exp calculations on every sample
+    const float epsilon = 0.0001f;  // Small threshold for float comparison
+
+    bool envChanged = std::abs(envValue_ - cachedEnvValue_) > epsilon;
+    bool lfoChanged = std::abs(lfoValue_ - cachedLfoValue_) > epsilon;
+    bool velocityChanged = std::abs(velocityValue_ - cachedVelocityValue_) > epsilon;
+
+    if (coefficientsNeedUpdate_ || envChanged || lfoChanged || velocityChanged) {
+        updateCoefficients();
     }
 }
 
