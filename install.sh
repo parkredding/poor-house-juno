@@ -245,6 +245,8 @@ main() {
 
     # Prompt user to select or confirm audio device
     SELECTED_AUDIO="$RECOMMENDED_AUDIO"
+    SELECTED_AUDIO_NAME=""
+
     if [ $device_count -gt 0 ]; then
         echo ""
         echo "Available audio devices:"
@@ -289,8 +291,25 @@ main() {
             done
         fi
 
-        print_success "Selected audio device: ${SELECTED_AUDIO}"
+        # Find the friendly name for the selected device
+        for i in "${!AUDIO_DEVICES[@]}"; do
+            if [ "${AUDIO_DEVICES[$i]}" = "$SELECTED_AUDIO" ]; then
+                SELECTED_AUDIO_NAME="${AUDIO_DESCRIPTIONS[$i]}"
+                break
+            fi
+        done
     fi
+
+    # Default friendly name if not found
+    if [ -z "$SELECTED_AUDIO_NAME" ]; then
+        if [ "$SELECTED_AUDIO" = "default" ]; then
+            SELECTED_AUDIO_NAME="ALSA default"
+        else
+            SELECTED_AUDIO_NAME="Unknown device"
+        fi
+    fi
+
+    print_success "Selected audio device: ${SELECTED_AUDIO} (${SELECTED_AUDIO_NAME})"
 
     # Save configuration
     CONFIG_DIR="${HOME}/.config/poor-house-juno"
@@ -304,6 +323,9 @@ main() {
 # Audio device (e.g., hw:2,0 or default)
 AUDIO_DEVICE=${SELECTED_AUDIO}
 
+# Friendly name for audio device (e.g., "bcm2835 Headphones" or "PCM5102")
+AUDIO_DEVICE_NAME=${SELECTED_AUDIO_NAME}
+
 # MIDI device (e.g., hw:1,0,0 or default)
 # Leave empty for auto-detection
 MIDI_DEVICE=
@@ -311,7 +333,7 @@ EOF
     echo ""
     print_header "Configuration Saved"
     echo ""
-    echo "Audio Device: ${SELECTED_AUDIO}"
+    echo "Audio Device: ${SELECTED_AUDIO} (${SELECTED_AUDIO_NAME})"
     echo "Config File:  ${CONFIG_FILE}"
     echo ""
     print_success "Configuration saved successfully"
