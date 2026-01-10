@@ -17,7 +17,32 @@ This guide covers deploying Poor House Juno on a Raspberry Pi using:
 
 ---
 
-## Quick Setup (15 minutes)
+## Quick Setup (5 minutes)
+
+### Option A: One-Line Install (Recommended)
+
+**Via SSH, run this single command:**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/parkredding/poor-house-juno/main/install.sh | bash
+```
+
+This automatically:
+- Installs all dependencies
+- Clones and builds the project
+- Offers to set up auto-start on boot
+
+**Then run the synth:**
+```bash
+cd ~/poor-house-juno
+./build-pi/poor-house-juno --audio hw:0,0 --midi hw:1,0,0
+```
+
+Skip to **Step 2** below to configure audio.
+
+---
+
+### Option B: Manual Installation
 
 ### 1. Clone and Build
 
