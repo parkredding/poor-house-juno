@@ -340,6 +340,7 @@ int main(int argc, char** argv) {
 
     // Initialize audio driver
     AudioDriver audio;
+    std::cout << "Audio selection: " << audioDevice << std::endl;
     if (!audio.initialize(audioDevice, 48000, 128)) {
         std::cerr << "Failed to initialize audio device '" << audioDevice << "'" << std::endl;
         std::cerr << "Run 'aplay -l' to list devices; try --audio hw:0,0 or set PHJ_AUDIO_DEVICE." << std::endl;
