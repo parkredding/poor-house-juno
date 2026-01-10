@@ -1,8 +1,47 @@
 # Unit Test Findings - M15 Polish & Optimization
 
+## ✅ FINAL STATUS (January 10, 2026)
+
+**Test Suite:** COMPLETE ✅ ALL TESTS PASSING
+**Status:** 32 passed / 0 failed (237/237 assertions passed)
+
+### Summary
+
+All DSP components now have comprehensive unit test coverage:
+- ✅ Oscillator/DCO (6 test cases)
+- ✅ Filter (7 test cases)
+- ✅ Envelope (3 test cases)
+- ✅ LFO (3 test cases)
+- ✅ Voice (6 test cases)
+- ✅ **Chorus (7 test cases)** - NEW!
+
+### Recent Updates (Jan 10, 2026)
+
+**Chorus Unit Tests Added:**
+- Mode I characteristics (2.5ms delay, 0.5ms depth, 0.65 Hz)
+- Mode II characteristics (4.0ms delay, 0.8ms depth, 0.50 Hz)
+- Mode I+II (Both) combined effect
+- Stereo output verification
+- BBD delay modulation
+- Dry/wet mix levels
+- Sample rate handling
+
+**Key Finding:** Chorus tests initially failed when using constant DC signals as input. Fixed by using time-varying sine wave inputs, which properly demonstrate delay modulation effects.
+
+### M15 Sprint 1: Verification - COMPLETE ✅
+- Chorus unit tests created and passing
+- All 32 test cases validated
+- 100% test pass rate achieved
+- Ready for Sprint 2 (TAL Comparison Tools)
+
+---
+
+## Historical Record - Initial Test Run (January 9, 2026)
+
 **Date:** January 9, 2026
 **Test Run:** Initial unit test suite execution
 **Status:** 13 passed / 12 failed (172/189 assertions passed)
+**Note:** All issues below were subsequently FIXED in commits 0159f58 and 83d9bc1
 
 ## Overview
 
