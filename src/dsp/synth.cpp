@@ -215,6 +215,11 @@ void Synth::handleControlChange(int controller, int value) {
             performanceParams_.modWheel = normalized;
             break;
 
+        case 7:  // MIDI Volume (standard MIDI CC 7)
+            performanceParams_.vcaLevel = normalized;
+            setPerformanceParameters(performanceParams_);
+            break;
+
         case 14:  // DCO Saw Level
             dcoParams_.sawLevel = normalized;
             setDcoParameters(dcoParams_);
