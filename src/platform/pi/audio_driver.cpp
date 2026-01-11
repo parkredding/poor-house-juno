@@ -123,8 +123,25 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         std::cout << "Note: Requested " << requestedRate << " Hz, using " << sampleRate << " Hz" << std::endl;
     }
 
-    // Set buffer size
+    // Set buffer size - use larger buffer to prevent underruns
+    // For low latency: 4 periods provides good balance
     snd_pcm_uframes_t periodSize = bufferSize;
+    snd_pcm_uframes_t bufferSizeFrames = bufferSize * 4;  // 4 periods
+
+    // Set periods first (ALSA requirement)
+    unsigned int periods = 4;
+    err = snd_pcm_hw_params_set_periods_near(handle_, params, &periods, 0);
+    if (err < 0) {
+        std::cerr << "Cannot set periods: " << snd_strerror(err) << std::endl;
+        // Not fatal, continue
+    }
+
+    err = snd_pcm_hw_params_set_buffer_size_near(handle_, params, &bufferSizeFrames);
+    if (err < 0) {
+        std::cerr << "Cannot set buffer size: " << snd_strerror(err) << std::endl;
+        // Not fatal, continue
+    }
+
     err = snd_pcm_hw_params_set_period_size_near(handle_, params, &periodSize, 0);
     if (err < 0) {
         std::cerr << "Cannot set period size: " << snd_strerror(err) << std::endl;
@@ -146,6 +163,7 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
     // Read back the actual parameters that were set
     snd_pcm_hw_params_get_rate(params, &sampleRate, 0);
     snd_pcm_hw_params_get_period_size(params, &periodSize, 0);
+    snd_pcm_hw_params_get_buffer_size(params, &bufferSizeFrames);
 
     sampleRate_ = sampleRate;
     bufferSize_ = periodSize;
@@ -171,7 +189,11 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         hwBuffer_ = nullptr;  // FLOAT_LE - no conversion needed
     }
 
-    std::cout << "Audio initialized: " << sampleRate_ << " Hz, " << bufferSize_ << " samples/buffer" << std::endl;
+    float latencyMs = (float)bufferSize_ / sampleRate_ * 1000.0f;
+    float totalLatencyMs = (float)bufferSizeFrames / sampleRate_ * 1000.0f;
+    std::cout << "Audio initialized: " << sampleRate_ << " Hz" << std::endl;
+    std::cout << "  Period size: " << bufferSize_ << " samples (" << latencyMs << " ms)" << std::endl;
+    std::cout << "  Buffer size: " << bufferSizeFrames << " samples (" << totalLatencyMs << " ms)" << std::endl;
 
     return true;
 }

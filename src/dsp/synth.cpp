@@ -211,8 +211,14 @@ void Synth::handleControlChange(int controller, int value) {
     float normalized = clamp(value / 127.0f, 0.0f, 1.0f);
 
     switch (controller) {
-        case 1:  // Mod Wheel (also handled by handleModWheel)
-            performanceParams_.modWheel = normalized;
+        case 1:  // Mod Wheel - map to volume for Arturia MiniLab
+            performanceParams_.vcaLevel = normalized;
+            setPerformanceParameters(performanceParams_);
+            break;
+
+        case 7:  // MIDI Volume (standard MIDI CC 7)
+            performanceParams_.vcaLevel = normalized;
+            setPerformanceParameters(performanceParams_);
             break;
 
         case 14:  // DCO Saw Level
