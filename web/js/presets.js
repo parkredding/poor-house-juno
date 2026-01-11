@@ -40,74 +40,76 @@ export class PresetManager {
 
     getInitPreset() {
         return {
-            sawLevel: 0.6,
-            pulseLevel: 0.4,
+            // Warm, classic analog sound with single oscillator
+            sawLevel: 0.7,
+            pulseLevel: 0.3,
             subLevel: 0.0,
             noiseLevel: 0.0,
             pulseWidth: 0.5,
-            pwmDepth: 0.3,
+            pwmDepth: 0.0,  // No PWM for cleaner sound
             detune: 0,
             driftEnabled: true,
-            lfoRate: 4.5,
+            lfoRate: 2.0,  // Slower LFO
             lfoDelay: 0.0,
-            lfoTarget: 2,
-            filterCutoff: 0.65,
-            filterResonance: 0.4,
-            filterEnvAmount: 0.5,
+            lfoTarget: 0,  // No LFO modulation initially
+            filterCutoff: 0.55,  // Lower cutoff for warmth
+            filterResonance: 0.2,  // Gentle resonance
+            filterEnvAmount: 0.3,  // Subtle filter movement
             filterKeyTrack: 1,
-            filterEnvAttack: 0.01,
-            filterEnvDecay: 0.8,
-            filterEnvSustain: 0.4,
-            filterEnvRelease: 0.5,
-            ampEnvAttack: 0.01,
-            ampEnvDecay: 0.5,
-            ampEnvSustain: 0.7,
-            ampEnvRelease: 0.4,
-            chorusMode: 2,
+            filterEnvAttack: 0.02,
+            filterEnvDecay: 0.6,
+            filterEnvSustain: 0.5,
+            filterEnvRelease: 0.4,
+            ampEnvAttack: 0.02,  // Slightly softer attack
+            ampEnvDecay: 0.4,
+            ampEnvSustain: 0.8,
+            ampEnvRelease: 0.3,
+            chorusMode: 1,  // Light Chorus I for subtle width
             vcaMode: 0,  // M13: ENV mode
             filterEnvPolarity: 0,  // M13: Normal polarity
             dcoRange: 1,  // M14: 8' (normal pitch)
-            vcaLevel: 0.8,  // M14: 80%
+            vcaLevel: 0.85,  // M14: 85%
             masterTune: 0,  // M14: 0 cents
-            velocityToFilter: 0,  // M14: 0%
-            velocityToAmp: 1.0,  // M14: 100%
+            velocityToFilter: 0.1,  // M14: 10% subtle filter response
+            velocityToAmp: 0.8,  // M14: 80% moderate velocity response
             voiceAllocationMode: 0  // M16: Oldest (default)
         };
     }
 
     getClassicJunoPreset() {
         return {
-            sawLevel: 0.6,
-            pulseLevel: 0.4,
+            // Classic Juno sound with PWM warmth
+            sawLevel: 0.5,
+            pulseLevel: 0.5,
             subLevel: 0.0,
             noiseLevel: 0.0,
             pulseWidth: 0.5,
-            pwmDepth: 0.3,
+            pwmDepth: 0.15,  // Reduced PWM for subtlety
             detune: 0,
             driftEnabled: true,
-            lfoRate: 4.5,
+            lfoRate: 3.0,  // Moderate LFO speed
             lfoDelay: 0.0,
-            lfoTarget: 2,
-            filterCutoff: 0.65,
-            filterResonance: 0.4,
-            filterEnvAmount: 0.5,
+            lfoTarget: 2,  // PWM modulation
+            filterCutoff: 0.6,  // Balanced brightness
+            filterResonance: 0.3,  // Moderate resonance
+            filterEnvAmount: 0.35,  // Gentler filter sweep
             filterKeyTrack: 1,
-            filterEnvAttack: 0.01,
-            filterEnvDecay: 0.8,
-            filterEnvSustain: 0.4,
+            filterEnvAttack: 0.015,
+            filterEnvDecay: 0.7,
+            filterEnvSustain: 0.5,
             filterEnvRelease: 0.5,
-            ampEnvAttack: 0.01,
-            ampEnvDecay: 0.5,
-            ampEnvSustain: 0.7,
-            ampEnvRelease: 0.4,
-            chorusMode: 2,
+            ampEnvAttack: 0.015,
+            ampEnvDecay: 0.4,
+            ampEnvSustain: 0.75,
+            ampEnvRelease: 0.35,
+            chorusMode: 2,  // Rich Chorus II
             vcaMode: 0,  // M13: ENV mode
             filterEnvPolarity: 0,  // M13: Normal polarity
             dcoRange: 1,  // M14: 8' (normal pitch)
-            vcaLevel: 0.8,  // M14: 80%
+            vcaLevel: 0.82,  // M14: 82%
             masterTune: 0,  // M14: 0 cents
-            velocityToFilter: 0,  // M14: 0%
-            velocityToAmp: 1.0,  // M14: 100%
+            velocityToFilter: 0.15,  // M14: 15% subtle response
+            velocityToAmp: 0.9,  // M14: 90% velocity response
             voiceAllocationMode: 0  // M16: Oldest (default)
         };
     }
