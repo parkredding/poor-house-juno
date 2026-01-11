@@ -26,6 +26,11 @@ void Envelope::setParameters(const EnvelopeParams& params) {
 }
 
 void Envelope::noteOn() {
+    // If starting from idle (value near 0), set to small initial value
+    // to prevent harsh filter sweep artifact from extremely low cutoff
+    if (stage_ == IDLE && value_ < 0.001f) {
+        value_ = 0.001f;  // Tiny value instead of 0
+    }
     stage_ = ATTACK;
     targetValue_ = 1.0f;
 }
