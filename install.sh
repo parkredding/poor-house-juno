@@ -140,12 +140,12 @@ main() {
     check_platform
 
     # Step 1: Update & Dep
-    print_step 1 6 "Updating dependencies"
+    print_step 1 7 "Updating dependencies"
     sudo apt-get update -qq < /dev/null
     sudo apt-get install -y -qq build-essential cmake git libasound2-dev pkg-config alsa-utils < /dev/null 2>&1 | grep -v "Processing\|Preparing" || true
 
     # Step 2: Clone/Update
-    print_step 2 6 "Fetching source"
+    print_step 2 7 "Fetching source"
     if [ -d "$INSTALL_DIR" ]; then
         cd "$INSTALL_DIR"
         git fetch origin < /dev/null
@@ -159,7 +159,7 @@ main() {
     fi
 
     # Step 3: Build
-    print_step 3 6 "Building Poor House Juno"
+    print_step 3 7 "Building Poor House Juno"
     print_info "This may take 5-10 minutes..."
     
     # Refresh sudo credentials before long build
@@ -180,7 +180,7 @@ main() {
     sudo -v
 
     # Step 4: Audio Selection
-    print_step 4 6 "Audio Configuration"
+    print_step 4 7 "Audio Configuration"
     
     # --- CRITICAL: Disable exit-on-error for detection phase ---
     set +e
@@ -237,8 +237,8 @@ main() {
         fi
     fi
 
-    # Step 5: Save Config
-    print_step 5 6 "Saving Configuration"
+    # Step 6: Save Config
+    print_step 6 7 "Saving Configuration"
     CONFIG_DIR="${HOME}/.config/poor-house-juno"
     mkdir -p "$CONFIG_DIR"
     cat > "${CONFIG_DIR}/config" << EOF
@@ -248,8 +248,8 @@ MIDI_DEVICE=
 EOF
     print_success "Saved to ${CONFIG_DIR}/config"
 
-    # Step 6: Autostart
-    print_step 6 6 "Service Setup"
+    # Step 7: Autostart
+    print_step 7 7 "Service Setup"
     get_input "Configure auto-start on boot? (y/n)" "n" "AUTOSTART"
     if [[ "$AUTOSTART" =~ ^[Yy] ]]; then
         setup_autostart "$SELECTED_AUDIO"
@@ -259,22 +259,129 @@ EOF
     echo "Run manually: ${INSTALL_DIR}/build-pi/poor-house-juno --audio ${SELECTED_AUDIO}"
 }
 
+enumerate_midi_devices() {
+    # Parse amidi -l output to extract MIDI device IDs and names
+    # Output format: "Dir Device    Name"
+    # Example: "IO  hw:1,0,0  Launchpad Mini MIDI 1"
+
+    set +e
+    local amidi_output=$(amidi -l 2>/dev/null)
+    set -e
+
+    declare -a MIDI_DEVICES
+    declare -a MIDI_NAMES
+    local count=0
+
+    # Parse amidi output, skip header line
+    while IFS= read -r line; do
+        # Match lines with hw:X,Y,Z format
+        if [[ $line =~ (hw:[0-9]+,[0-9]+,[0-9]+)[[:space:]]+(.*) ]]; then
+            MIDI_DEVICES[$count]="${BASH_REMATCH[1]}"
+            MIDI_NAMES[$count]="${BASH_REMATCH[2]}"
+            ((count++))
+        fi
+    done <<< "$amidi_output"
+
+    # Export arrays for caller
+    eval "$1=(\"\${MIDI_DEVICES[@]}\")"
+    eval "$2=(\"\${MIDI_NAMES[@]}\")"
+    echo "$count"
+}
+
+detect_recommended_midi() {
+    # Recommend MIDI devices with priority:
+    # 1. USB MIDI controllers (not gadgets)
+    # 2. USB gadgets (g_midi, Gadget keywords)
+    # 3. First available device
+
+    local -n devices=$1
+    local -n names=$2
+    local count=$3
+
+    local recommended=""
+    local gadget_device=""
+
+    for i in $(seq 0 $((count-1))); do
+        local name="${names[$i]}"
+        local device="${devices[$i]}"
+
+        # Check for USB gadget (g_midi, Gadget, PoorHouseJuno)
+        if [[ $name =~ (g_midi|Gadget|PoorHouseJuno) ]]; then
+            [ -z "$gadget_device" ] && gadget_device="$device"
+        # Prefer non-gadget USB MIDI controllers
+        elif [[ $name =~ (MIDI|Controller|Keyboard|Launchpad|Arturia) ]]; then
+            recommended="$device"
+            break
+        fi
+    done
+
+    # Use gadget if no controller found
+    [ -z "$recommended" ] && [ -n "$gadget_device" ] && recommended="$gadget_device"
+
+    # Fallback to first device
+    [ -z "$recommended" ] && [ "$count" -gt 0 ] && recommended="${devices[0]}"
+
+    echo "$recommended"
+}
+
 setup_autostart() {
     local audio_device="$1"
-    
-    echo -e "\nAvailable MIDI Devices:"
-    # Use +e here too just in case amidi fails
+
+    # Step for MIDI Configuration
+    print_step 5 7 "MIDI Configuration"
+
     set +e
-    amidi -l 2>/dev/null || echo "  (None found or permission denied)"
+    declare -a MIDI_DEVICES
+    declare -a MIDI_NAMES
+    local midi_count=$(enumerate_midi_devices MIDI_DEVICES MIDI_NAMES)
     set -e
-    
-    get_input "Enter MIDI device (or press Enter for auto)" "hw:1,0,0" "MIDI_DEV"
-    
-    sed -i "s|^MIDI_DEVICE=.*|MIDI_DEVICE=${MIDI_DEV}|" "${HOME}/.config/poor-house-juno/config"
+
+    local SELECTED_MIDI=""
+    local SELECTED_MIDI_NAME="None"
+
+    if [ "$midi_count" -eq 0 ]; then
+        print_info "No MIDI devices found. You can plug one in later and reconfigure."
+        SELECTED_MIDI=""
+    else
+        # Detect recommended device
+        set +e
+        local RECOMMENDED_MIDI=$(detect_recommended_midi MIDI_DEVICES MIDI_NAMES "$midi_count")
+        set -e
+
+        echo -e "\nAvailable MIDI devices:"
+        for i in "${!MIDI_DEVICES[@]}"; do
+            local marker=""
+            [ "${MIDI_DEVICES[$i]}" = "$RECOMMENDED_MIDI" ] && marker=" [recommended]"
+            echo "  $((i+1)). ${MIDI_DEVICES[$i]} - ${MIDI_NAMES[$i]}${marker}"
+        done
+        echo "  $((midi_count+1)). None (auto-detect at startup)"
+
+        set -e
+        get_input "Select MIDI device (1-$((midi_count+1)))" "" "MIDI_CHOICE"
+
+        # Default to recommended
+        SELECTED_MIDI="$RECOMMENDED_MIDI"
+        SELECTED_MIDI_NAME="Auto-detected"
+
+        if [[ "$MIDI_CHOICE" =~ ^[0-9]+$ ]]; then
+            if [ "$MIDI_CHOICE" -le "$midi_count" ] && [ "$MIDI_CHOICE" -gt 0 ]; then
+                local idx=$((MIDI_CHOICE-1))
+                SELECTED_MIDI="${MIDI_DEVICES[$idx]}"
+                SELECTED_MIDI_NAME="${MIDI_NAMES[$idx]}"
+            elif [ "$MIDI_CHOICE" -eq $((midi_count+1)) ]; then
+                SELECTED_MIDI=""
+                SELECTED_MIDI_NAME="Auto-detect"
+            fi
+        fi
+    fi
+
+    # Update config file
+    sed -i "s|^MIDI_DEVICE=.*|MIDI_DEVICE=${SELECTED_MIDI}|" "${HOME}/.config/poor-house-juno/config"
+    print_success "MIDI device: ${SELECTED_MIDI_NAME}"
 
     local exec_cmd="${INSTALL_DIR}/build-pi/poor-house-juno"
     [ "$audio_device" != "default" ] && exec_cmd="${exec_cmd} --audio ${audio_device}"
-    exec_cmd="${exec_cmd} --midi ${MIDI_DEV}"
+    [ -n "$SELECTED_MIDI" ] && exec_cmd="${exec_cmd} --midi ${SELECTED_MIDI}"
 
     # Use tee to write file with sudo permissions
     cat << EOF | sudo tee /etc/systemd/system/poor-house-juno.service > /dev/null

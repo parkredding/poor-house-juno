@@ -170,6 +170,53 @@ static MidiDeviceInfo chooseMidiDevice() {
     return devices.front();
 }
 
+// Check for newly connected MIDI devices
+static MidiDeviceInfo checkForNewMidiDevices(const std::string& currentDeviceId) {
+    MidiDeviceInfo newDevice;
+    newDevice.hwId = "";  // Empty means no new device
+
+    auto devices = listMidiInputs();
+    if (devices.empty()) {
+        return newDevice;
+    }
+
+    // Check if any new device is different from current and is a controller
+    for (const auto& d : devices) {
+        // Skip if this is the current device
+        if (d.hwId == currentDeviceId) {
+            continue;
+        }
+
+        // Prioritize USB MIDI controllers (not gadgets) over gadgets
+        // If we find a non-gadget controller, recommend it
+        if (!d.isGadget) {
+            // Check if device name suggests it's a MIDI controller
+            if (d.deviceName.find("MIDI") != std::string::npos ||
+                d.deviceName.find("Controller") != std::string::npos ||
+                d.deviceName.find("Keyboard") != std::string::npos ||
+                d.deviceName.find("Launchpad") != std::string::npos ||
+                d.deviceName.find("Arturia") != std::string::npos ||
+                d.cardName.find("MIDI") != std::string::npos) {
+                return d;
+            }
+        }
+    }
+
+    // If we didn't find a preferred controller, check for gadgets
+    for (const auto& d : devices) {
+        if (d.hwId != currentDeviceId && d.isGadget) {
+            return d;
+        }
+    }
+
+    // If we found any new device different from current, return it
+    if (!devices.empty() && devices.front().hwId != currentDeviceId) {
+        return devices.front();
+    }
+
+    return newDevice;
+}
+
 // Audio callback
 void audioCallback(float* left, float* right, int numSamples, void* userData) {
     Synth* synth = static_cast<Synth*>(userData);
@@ -512,18 +559,77 @@ int main(int argc, char** argv) {
         std::cout << "Test chord finished. Running idle (waiting for Ctrl+C)..." << std::endl;
     }
 
-    // Main loop - display CPU usage every 5 seconds
+    // Main loop - display CPU usage every 5 seconds and check for MIDI hot-plug
     int loopCounter = 0;
+    int midiCheckCounter = 0;
+    std::string currentMidiDevice = midiDevice.hwId;
+    bool midiRunning = midi.isRunning();
+
     while (g_running) {
         sleep(1);
         loopCounter++;
+        midiCheckCounter++;
 
+        // Display CPU usage every 5 seconds
         if (loopCounter >= 5) {
             float cpuUsage = g_cpuMonitor.getCpuUsage();
             if (cpuUsage > 0.0f) {
                 std::cout << "CPU Usage: " << cpuUsage << "%" << std::endl;
             }
             loopCounter = 0;
+        }
+
+        // Check for new MIDI devices every 10 seconds
+        if (midiCheckCounter >= 10) {
+            MidiDeviceInfo newDevice = checkForNewMidiDevices(currentMidiDevice);
+
+            if (!newDevice.hwId.empty()) {
+                std::cout << "\n=======================================" << std::endl;
+                std::cout << "New MIDI Device Detected!" << std::endl;
+                std::cout << "=======================================" << std::endl;
+                std::cout << "Device: " << newDevice.hwId << std::endl;
+                std::cout << "Name:   " << newDevice.cardName << " - " << newDevice.deviceName << std::endl;
+                std::cout << "Type:   " << (newDevice.isGadget ? "USB gadget / DAW" : "Controller/Standalone") << std::endl;
+
+                // Prompt user to switch
+                std::cout << "\nSwitch to this device? (y/n): " << std::flush;
+
+                // Set stdin to non-blocking temporarily for user input
+                char response;
+                std::cin >> response;
+
+                if (response == 'y' || response == 'Y') {
+                    std::cout << "Switching to new MIDI device..." << std::endl;
+
+                    // Stop current MIDI driver
+                    if (midiRunning) {
+                        midi.stop();
+                        midi.shutdown();
+                    }
+
+                    // Initialize with new device
+                    if (midi.initialize(newDevice.hwId)) {
+                        midi.setCallback(midiCallback, &g_synth);
+                        if (midi.start()) {
+                            currentMidiDevice = newDevice.hwId;
+                            midiRunning = true;
+                            std::cout << "Successfully switched to " << newDevice.hwId << std::endl;
+                        } else {
+                            std::cerr << "[WARNING] Failed to start new MIDI device" << std::endl;
+                            midiRunning = false;
+                        }
+                    } else {
+                        std::cerr << "[WARNING] Failed to initialize new MIDI device" << std::endl;
+                        midiRunning = false;
+                    }
+                } else {
+                    std::cout << "Keeping current MIDI device: " << currentMidiDevice << std::endl;
+                }
+
+                std::cout << "=======================================" << std::endl;
+            }
+
+            midiCheckCounter = 0;
         }
     }
 
