@@ -26,6 +26,12 @@ void Envelope::setParameters(const EnvelopeParams& params) {
 }
 
 void Envelope::noteOn() {
+    // If starting from idle, initialize to sustain level to prevent
+    // harsh filter sweep artifact. This makes the attack sweep from
+    // sustain→peak instead of 0→peak, reducing the sweep range.
+    if (stage_ == IDLE) {
+        value_ = params_.sustain;
+    }
     stage_ = ATTACK;
     targetValue_ = 1.0f;
 }

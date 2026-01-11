@@ -75,6 +75,7 @@ void Voice::noteOn(int midiNote, float velocity) {
 
     // Trigger envelopes and oscillator
     dco_.noteOn();
+    filter_.reset();  // Clear filter state to prevent artifacts
     filterEnv_.noteOn();
     ampEnv_.noteOn();
 }
