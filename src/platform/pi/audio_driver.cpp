@@ -34,14 +34,73 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
     // Allocate hardware parameters object
     snd_pcm_hw_params_t* params;
     snd_pcm_hw_params_alloca(&params);
-    snd_pcm_hw_params_any(handle_, params);
 
-    // Set parameters
-    snd_pcm_hw_params_set_access(handle_, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-    snd_pcm_hw_params_set_format(handle_, params, SND_PCM_FORMAT_FLOAT_LE);
-    snd_pcm_hw_params_set_channels(handle_, params, 2);  // Stereo
-    snd_pcm_hw_params_set_rate_near(handle_, params, &sampleRate, 0);
-    snd_pcm_hw_params_set_period_size_near(handle_, params, (snd_pcm_uframes_t*)&bufferSize, 0);
+    err = snd_pcm_hw_params_any(handle_, params);
+    if (err < 0) {
+        std::cerr << "Cannot initialize hardware parameters: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    // Set parameters with error checking
+    err = snd_pcm_hw_params_set_access(handle_, params, SND_PCM_ACCESS_RW_INTERLEAVED);
+    if (err < 0) {
+        std::cerr << "Cannot set access type: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    err = snd_pcm_hw_params_set_format(handle_, params, SND_PCM_FORMAT_FLOAT_LE);
+    if (err < 0) {
+        std::cerr << "Cannot set sample format: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    err = snd_pcm_hw_params_set_channels(handle_, params, 2);
+    if (err < 0) {
+        std::cerr << "Cannot set channel count: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    // Set sample rate and read back actual value
+    unsigned int requestedRate = sampleRate;
+    err = snd_pcm_hw_params_set_rate_near(handle_, params, &sampleRate, 0);
+    if (err < 0) {
+        std::cerr << "Cannot set sample rate: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    // Validate sample rate is reasonable
+    if (sampleRate < 8000 || sampleRate > 192000) {
+        std::cerr << "Invalid sample rate returned by ALSA: " << sampleRate << " Hz" << std::endl;
+        std::cerr << "Requested: " << requestedRate << " Hz" << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+
+    if (sampleRate != requestedRate) {
+        std::cout << "Note: Requested " << requestedRate << " Hz, using " << sampleRate << " Hz" << std::endl;
+    }
+
+    // Set buffer size
+    snd_pcm_uframes_t periodSize = bufferSize;
+    err = snd_pcm_hw_params_set_period_size_near(handle_, params, &periodSize, 0);
+    if (err < 0) {
+        std::cerr << "Cannot set period size: " << snd_strerror(err) << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
+    bufferSize = periodSize;
 
     // Write parameters
     err = snd_pcm_hw_params(handle_, params);
@@ -52,8 +111,21 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         return false;
     }
 
+    // Read back the actual parameters that were set
+    snd_pcm_hw_params_get_rate(params, &sampleRate, 0);
+    snd_pcm_hw_params_get_period_size(params, &periodSize, 0);
+
     sampleRate_ = sampleRate;
-    bufferSize_ = bufferSize;
+    bufferSize_ = periodSize;
+
+    // Final validation
+    if (sampleRate_ == 0) {
+        std::cerr << "ERROR: Sample rate is 0 after configuration!" << std::endl;
+        std::cerr << "This usually means the audio device doesn't support the requested format." << std::endl;
+        snd_pcm_close(handle_);
+        handle_ = nullptr;
+        return false;
+    }
 
     // Allocate interleaved buffer
     interleavedBuffer_ = new float[bufferSize_ * 2];  // Stereo
