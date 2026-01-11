@@ -56,7 +56,11 @@ detect_audio_device() {
     local best_device=""
     local best_score=0
 
-    # Parse aplay -l output to extract all available devices
+    # Save aplay output to avoid process substitution issues in piped environments
+    local aplay_output
+    aplay_output=$(aplay -l 2>/dev/null) || true
+
+    # Parse aplay output to extract all available devices
     while IFS= read -r line; do
         # Match lines like: "card 0: vc4hdmi0 [vc4-hdmi-0], device 0:"
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
@@ -118,7 +122,7 @@ detect_audio_device() {
                 print_info "  ${hw_id} not compatible" >&2
             fi
         fi
-    done < <(aplay -l 2>/dev/null)
+    done <<< "$aplay_output"
 
     echo "$best_device"
 }
@@ -220,6 +224,10 @@ main() {
     declare -a AUDIO_DESCRIPTIONS
     local device_count=0
 
+    # Save aplay output to avoid process substitution issues in piped environments
+    local aplay_list
+    aplay_list=$(aplay -l 2>/dev/null) || true
+
     while IFS= read -r line; do
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
             local card="${BASH_REMATCH[1]}"
@@ -229,12 +237,12 @@ main() {
 
             AUDIO_DEVICES[$device_count]="$hw_id"
             AUDIO_DESCRIPTIONS[$device_count]="$card_name"
-            ((device_count++))
+            ((device_count++)) || true
         fi
-    done < <(aplay -l 2>/dev/null)
+    done <<< "$aplay_list"
 
     # Auto-detect recommended device
-    RECOMMENDED_AUDIO=$(detect_audio_device)
+    RECOMMENDED_AUDIO=$(detect_audio_device) || true
 
     if [ -n "$RECOMMENDED_AUDIO" ]; then
         print_success "Recommended audio device: ${RECOMMENDED_AUDIO}"
@@ -247,7 +255,10 @@ main() {
     SELECTED_AUDIO="$RECOMMENDED_AUDIO"
     SELECTED_AUDIO_NAME=""
 
-    if [ $device_count -gt 0 ]; then
+    # Ensure device_count is set
+    device_count=${device_count:-0}
+
+    if [ "$device_count" -gt 0 ]; then
         echo ""
         echo "Available audio devices:"
         for i in "${!AUDIO_DEVICES[@]}"; do
