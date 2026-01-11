@@ -15,6 +15,7 @@ NC='\033[0m'
 INSTALL_DIR="${HOME}/poor-house-juno"
 REPO_URL="https://github.com/parkredding/poor-house-juno.git"
 BRANCH="${BRANCH:-main}"
+TEMP_AUDIO_LIST="/tmp/phj_audio_list.txt"
 
 # --- Helper Functions ---
 
@@ -25,19 +26,16 @@ print_info() { echo -e "${YELLOW}ℹ${NC} $1"; }
 print_step() { echo -e "\n${BLUE}[Step $1/$2]${NC} $3"; }
 
 # Robust Input Function (Safe for curl | bash)
-# This forces reading from the terminal (/dev/tty) instead of the pipe (stdin)
 get_input() {
     local prompt="$1"
     local default="$2"
     local var_name="$3"
     local input_src="/dev/stdin"
     
-    # If a real terminal exists, use it. This bypasses the curl pipe.
     if [ -c /dev/tty ]; then
         input_src="/dev/tty"
     fi
 
-    # If we are in a pipe and no TTY, we cannot accept input safely
     if [ ! -t 0 ] && [ "$input_src" = "/dev/stdin" ]; then
         print_info "Non-interactive mode detected. Using default: $default"
         eval "$var_name='$default'"
@@ -51,7 +49,6 @@ get_input() {
         prompt_text="$prompt: "
     fi
 
-    # Print prompt to stderr to avoid mixing with stdout if captured
     echo -n "$prompt_text" >&2
     read -r response < "$input_src"
     
@@ -65,12 +62,8 @@ get_input() {
 check_platform() {
     if ! grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null && ! grep -q "BCM" /proc/cpuinfo 2>/dev/null; then
         print_error "This script is designed for Raspberry Pi"
-        print_info "Detected platform: $(uname -m)"
-        
         get_input "Continue anyway? (y/n)" "n" "CONTINUE_CHOICE"
-        if [[ ! $CONTINUE_CHOICE =~ ^[Yy]$ ]]; then
-            exit 1
-        fi
+        if [[ ! $CONTINUE_CHOICE =~ ^[Yy]$ ]]; then exit 1; fi
     fi
 }
 
@@ -78,23 +71,22 @@ detect_audio_device() {
     local best_device=""
     local best_score=0
 
-    # We use mapfile to read all devices first to avoid loop subshells
-    mapfile -t RAW_DEVICES < <(aplay -l 2>/dev/null)
+    # Dump aplay output to temp file to avoid pipe/subshell issues
+    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null || true
 
-    for line in "${RAW_DEVICES[@]}"; do
+    while IFS= read -r line; do
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
             local card="${BASH_REMATCH[1]}"
             local card_name="${BASH_REMATCH[2]}"
             local device="${BASH_REMATCH[3]}"
             local hw_id="hw:${card},${device}"
             
-            # Skip loopback
             if [[ "$card_name" == "Loopback" ]]; then continue; fi
 
             print_info "Testing ${hw_id} (${card_name})..." >&2
             local test_passed=false
 
-            # Redirect stdin to /dev/null for all external tests to protect the main pipe
+            # Redirect stdin to /dev/null for safety
             if timeout 5 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 </dev/null >/dev/null 2>&1; then
                 test_passed=true
             elif timeout 5 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 </dev/null >/dev/null 2>&1; then
@@ -107,7 +99,6 @@ detect_audio_device() {
             if [ "$test_passed" = true ]; then
                 local score=1
                 local description="${card_name}"
-                
                 if [[ $card_name =~ (USB|Audio|DAC) ]]; then score=100; description="USB Audio";
                 elif [[ $card_name =~ (Headphones|bcm2835|Analog) ]]; then score=50; description="Headphones/Analog";
                 elif [[ $card_name =~ (HDMI|hdmi|vc4) ]]; then score=10; description="HDMI"; fi
@@ -121,7 +112,8 @@ detect_audio_device() {
                 print_info "  ${hw_id} not compatible" >&2
             fi
         fi
-    done
+    done < "$TEMP_AUDIO_LIST"
+    
     echo "$best_device"
 }
 
@@ -133,7 +125,6 @@ main() {
 
     # Step 1: Update & Dep
     print_step 1 6 "Updating dependencies"
-    # Redirect stdin to /dev/null to prevent apt from eating the script stream
     sudo apt-get update -qq < /dev/null
     sudo apt-get install -y -qq build-essential cmake git libasound2-dev pkg-config alsa-utils < /dev/null 2>&1 | grep -v "Processing\|Preparing" || true
 
@@ -157,7 +148,6 @@ main() {
     
     mkdir -p build-pi
     cd build-pi
-    # CMake and Make must not touch stdin
     cmake .. -DPLATFORM=pi -DCMAKE_BUILD_TYPE=Release < /dev/null
     make -j$(nproc) < /dev/null
 
@@ -170,19 +160,23 @@ main() {
     # Step 4: Audio Selection
     print_step 4 6 "Audio Configuration"
     
-    mapfile -t RAW_DEVICES < <(aplay -l 2>/dev/null | grep "^card")
+    # 1. Generate temp file safely
+    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null || true
+    
     declare -a AUDIO_DEVICES
     declare -a AUDIO_NAMES
-    
     count=0
-    for line in "${RAW_DEVICES[@]}"; do
+
+    # 2. Read from temp file (Safe, no process substitution)
+    while IFS= read -r line; do
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
             AUDIO_DEVICES[$count]="hw:${BASH_REMATCH[1]},${BASH_REMATCH[3]}"
             AUDIO_NAMES[$count]="${BASH_REMATCH[2]}"
             ((count++))
         fi
-    done
+    done < "$TEMP_AUDIO_LIST"
 
+    # 3. Detect recommended
     RECOMMENDED_AUDIO=$(detect_audio_device)
     [ -z "$RECOMMENDED_AUDIO" ] && RECOMMENDED_AUDIO="default"
 
@@ -194,7 +188,9 @@ main() {
     done
     echo "  $((count+1)). default (ALSA default)"
 
-    # Use the safe input function
+    # 4. Clean up
+    rm -f "$TEMP_AUDIO_LIST"
+
     get_input "Select audio device (1-$((count+1)))" "" "AUDIO_CHOICE"
 
     SELECTED_AUDIO="$RECOMMENDED_AUDIO"
