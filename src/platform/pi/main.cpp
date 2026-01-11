@@ -503,6 +503,7 @@ int main(int argc, char** argv) {
     if (!midi.isRunning()) {
         std::cout << "No MIDI available, playing test chord for 3 seconds..." << std::endl;
         std::cout << "(C major triad: C4, E4, G4)" << std::endl;
+        std::cout << "Build timestamp: " << __DATE__ << " " << __TIME__ << std::endl;
         g_synth.handleNoteOn(60, 0.8f);  // C4
         g_synth.handleNoteOn(64, 0.8f);  // E4
         g_synth.handleNoteOn(67, 0.8f);  // G4

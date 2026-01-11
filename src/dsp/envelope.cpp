@@ -81,7 +81,8 @@ float Envelope::process() {
             value_ += (targetValue_ - value_) * releaseCoeff_;
 
             // Transition to idle when close to zero
-            if (value_ <= 0.001f) {
+            // Use larger threshold to avoid denormal CPU slowdown
+            if (value_ <= 0.0001f) {
                 value_ = 0.0f;
                 stage_ = IDLE;
             }
