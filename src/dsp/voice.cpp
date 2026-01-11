@@ -164,10 +164,14 @@ void Voice::setSustained(bool sustained) {
 }
 
 Sample Voice::process() {
-    // Update voice age if active
-    if (isActive()) {
-        age_ += 1.0f;
+    // Early exit if voice is not active - saves massive CPU
+    // When idle, this eliminates unnecessary oscillator, filter, and envelope processing
+    if (!isActive()) {
+        return 0.0f;
     }
+
+    // Update voice age
+    age_ += 1.0f;
 
     // M11: Update portamento glide
     updateGlide();
