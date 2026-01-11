@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <sched.h>
+#include <cstdint>
 
 namespace phj {
 
@@ -12,7 +13,9 @@ AudioDriver::AudioDriver()
     , sampleRate_(0)
     , bufferSize_(0)
     , running_(false)
+    , format_(SND_PCM_FORMAT_UNKNOWN)
     , interleavedBuffer_(nullptr)
+    , hwBuffer_(nullptr)
     , audioThread_(0)
 {
 }
@@ -52,9 +55,32 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         return false;
     }
 
-    err = snd_pcm_hw_params_set_format(handle_, params, SND_PCM_FORMAT_FLOAT_LE);
-    if (err < 0) {
-        std::cerr << "Cannot set sample format: " << snd_strerror(err) << std::endl;
+    // Try multiple formats in order of preference
+    // 1. FLOAT_LE (best quality, no conversion needed)
+    // 2. S32_LE (good quality, 32-bit integer)
+    // 3. S16_LE (most compatible, 16-bit integer)
+    snd_pcm_format_t formatsToTry[] = {
+        SND_PCM_FORMAT_FLOAT_LE,
+        SND_PCM_FORMAT_S32_LE,
+        SND_PCM_FORMAT_S16_LE
+    };
+    const char* formatNames[] = {"FLOAT_LE", "S32_LE", "S16_LE"};
+
+    bool formatSet = false;
+    for (int i = 0; i < 3; i++) {
+        err = snd_pcm_hw_params_set_format(handle_, params, formatsToTry[i]);
+        if (err >= 0) {
+            format_ = formatsToTry[i];
+            formatSet = true;
+            if (i > 0) {
+                std::cout << "Note: Using " << formatNames[i] << " format (FLOAT_LE not supported)" << std::endl;
+            }
+            break;
+        }
+    }
+
+    if (!formatSet) {
+        std::cerr << "Cannot set sample format: Device doesn't support FLOAT_LE, S32_LE, or S16_LE" << std::endl;
         snd_pcm_close(handle_);
         handle_ = nullptr;
         return false;
@@ -127,8 +153,17 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         return false;
     }
 
-    // Allocate interleaved buffer
+    // Allocate interleaved buffer (always float for DSP processing)
     interleavedBuffer_ = new float[bufferSize_ * 2];  // Stereo
+
+    // Allocate hardware buffer if format conversion needed
+    if (format_ == SND_PCM_FORMAT_S16_LE) {
+        hwBuffer_ = new int16_t[bufferSize_ * 2];  // 16-bit stereo
+    } else if (format_ == SND_PCM_FORMAT_S32_LE) {
+        hwBuffer_ = new int32_t[bufferSize_ * 2];  // 32-bit stereo
+    } else {
+        hwBuffer_ = nullptr;  // FLOAT_LE - no conversion needed
+    }
 
     std::cout << "Audio initialized: " << sampleRate_ << " Hz, " << bufferSize_ << " samples/buffer" << std::endl;
 
@@ -141,6 +176,15 @@ void AudioDriver::shutdown() {
     if (interleavedBuffer_) {
         delete[] interleavedBuffer_;
         interleavedBuffer_ = nullptr;
+    }
+
+    if (hwBuffer_) {
+        if (format_ == SND_PCM_FORMAT_S16_LE) {
+            delete[] static_cast<int16_t*>(hwBuffer_);
+        } else if (format_ == SND_PCM_FORMAT_S32_LE) {
+            delete[] static_cast<int32_t*>(hwBuffer_);
+        }
+        hwBuffer_ = nullptr;
     }
 
     if (handle_) {
@@ -219,8 +263,37 @@ void AudioDriver::runAudioLoop() {
             interleavedBuffer_[i * 2 + 1] = rightBuffer[i];
         }
 
+        // Convert to hardware format if needed
+        void* writeBuffer;
+        if (format_ == SND_PCM_FORMAT_S16_LE) {
+            // Convert float (-1.0 to 1.0) to 16-bit signed integer (-32768 to 32767)
+            int16_t* s16Buffer = static_cast<int16_t*>(hwBuffer_);
+            for (unsigned int i = 0; i < bufferSize_ * 2; ++i) {
+                float sample = interleavedBuffer_[i];
+                // Clamp to valid range
+                if (sample > 1.0f) sample = 1.0f;
+                if (sample < -1.0f) sample = -1.0f;
+                s16Buffer[i] = static_cast<int16_t>(sample * 32767.0f);
+            }
+            writeBuffer = hwBuffer_;
+        } else if (format_ == SND_PCM_FORMAT_S32_LE) {
+            // Convert float (-1.0 to 1.0) to 32-bit signed integer
+            int32_t* s32Buffer = static_cast<int32_t*>(hwBuffer_);
+            for (unsigned int i = 0; i < bufferSize_ * 2; ++i) {
+                float sample = interleavedBuffer_[i];
+                // Clamp to valid range
+                if (sample > 1.0f) sample = 1.0f;
+                if (sample < -1.0f) sample = -1.0f;
+                s32Buffer[i] = static_cast<int32_t>(sample * 2147483647.0f);
+            }
+            writeBuffer = hwBuffer_;
+        } else {
+            // FLOAT_LE - no conversion needed
+            writeBuffer = interleavedBuffer_;
+        }
+
         // Write to ALSA
-        snd_pcm_sframes_t frames = snd_pcm_writei(handle_, interleavedBuffer_, bufferSize_);
+        snd_pcm_sframes_t frames = snd_pcm_writei(handle_, writeBuffer, bufferSize_);
 
         if (frames < 0) {
             frames = snd_pcm_recover(handle_, frames, 0);

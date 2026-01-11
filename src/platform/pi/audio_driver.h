@@ -34,7 +34,9 @@ private:
     unsigned int bufferSize_;
     bool running_;
 
+    snd_pcm_format_t format_;   // Audio format (S16_LE, S32_LE, or FLOAT_LE)
     float* interleavedBuffer_;  // Temporary buffer for ALSA interleaved format
+    void* hwBuffer_;            // Hardware format buffer (for S16/S32 conversion)
 
     void runAudioLoop();
     static void* audioThreadFunc(void* arg);
