@@ -64,6 +64,11 @@ Sample Filter::process(Sample input) {
     // Update coefficients to apply modulation (envelope, LFO, velocity, key tracking)
     updateCoefficients();
 
+    // Safety: Check for NaN or infinity in input
+    if (!std::isfinite(input)) {
+        input = 0.0f;
+    }
+
     // M11: Apply HPF first (if enabled)
     if (params_.hpfMode > 0) {
         input = processHPF(input);
@@ -76,14 +81,17 @@ Sample Filter::process(Sample input) {
     // ZDF 4-pole ladder filter
     // Based on Vadim Zavalishin's "The Art of VA Filter Design"
 
-    // Calculate feedback amount
-    float feedback = stage4_ * k_;
+    // Calculate normalized gain and feedback compensation
+    // CRITICAL: Without compensation, filter becomes unstable and produces NaN
+    float G = g_ / (1.0f + g_);  // Normalized cutoff per stage
+    float G4 = G * G * G * G;     // Total gain through 4 stages
 
-    // Input with feedback subtraction
-    float inputWithFeedback = input - feedback;
+    // Calculate feedback with stability compensation
+    float feedback = k_ * stage4_;
+    float inputCompensated = (input - feedback) / (1.0f + k_ * G4);
 
-    // Process through 4 stages
-    float v1 = (inputWithFeedback - stage1_) * g_;
+    // Process through 4 stages using TPT (Topology Preserving Transform)
+    float v1 = (inputCompensated - stage1_) * g_;
     float out1 = v1 + stage1_;
     stage1_ = out1 + v1;
 
@@ -98,6 +106,16 @@ Sample Filter::process(Sample input) {
     float v4 = (out3 - stage4_) * g_;
     float out4 = v4 + stage4_;
     stage4_ = out4 + v4;
+
+    // Safety: Check for denormals and NaN in filter states
+    // This prevents filter blow-up and denormal performance issues
+    if (!std::isfinite(stage1_) || std::abs(stage1_) < 1e-30f) stage1_ = 0.0f;
+    if (!std::isfinite(stage2_) || std::abs(stage2_) < 1e-30f) stage2_ = 0.0f;
+    if (!std::isfinite(stage3_) || std::abs(stage3_) < 1e-30f) stage3_ = 0.0f;
+    if (!std::isfinite(stage4_) || std::abs(stage4_) < 1e-30f) stage4_ = 0.0f;
+
+    // Safety: Clamp output to prevent clipping artifacts
+    out4 = clamp(out4, -2.0f, 2.0f);
 
     // Output is the 4th stage (4-pole = 24dB/octave)
     return out4;
