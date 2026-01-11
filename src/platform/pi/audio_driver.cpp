@@ -123,16 +123,23 @@ bool AudioDriver::initialize(const std::string& deviceName, unsigned int sampleR
         std::cout << "Note: Requested " << requestedRate << " Hz, using " << sampleRate << " Hz" << std::endl;
     }
 
-    // Set buffer size (total ring buffer = 2x period for low latency)
+    // Set buffer size - use larger buffer to prevent underruns
+    // For low latency: 4 periods provides good balance
     snd_pcm_uframes_t periodSize = bufferSize;
-    snd_pcm_uframes_t bufferSizeFrames = bufferSize * 2;  // 2 periods for double buffering
+    snd_pcm_uframes_t bufferSizeFrames = bufferSize * 4;  // 4 periods
+
+    // Set periods first (ALSA requirement)
+    unsigned int periods = 4;
+    err = snd_pcm_hw_params_set_periods_near(handle_, params, &periods, 0);
+    if (err < 0) {
+        std::cerr << "Cannot set periods: " << snd_strerror(err) << std::endl;
+        // Not fatal, continue
+    }
 
     err = snd_pcm_hw_params_set_buffer_size_near(handle_, params, &bufferSizeFrames);
     if (err < 0) {
         std::cerr << "Cannot set buffer size: " << snd_strerror(err) << std::endl;
-        snd_pcm_close(handle_);
-        handle_ = nullptr;
-        return false;
+        // Not fatal, continue
     }
 
     err = snd_pcm_hw_params_set_period_size_near(handle_, params, &periodSize, 0);
