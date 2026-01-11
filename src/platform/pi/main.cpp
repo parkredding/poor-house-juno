@@ -247,7 +247,7 @@ void initializeDefaultParameters(Synth& synth) {
     FilterParams filterParams;
     filterParams.cutoff = 0.7f;
     filterParams.resonance = 0.3f;
-    filterParams.envAmount = 0.5f;
+    filterParams.envAmount = 0.15f;  // Reduced to prevent sweep artifact
     filterParams.lfoAmount = 0.0f;
     filterParams.keyTrack = FilterParams::KEY_TRACK_HALF;
     filterParams.drive = 1.0f;
