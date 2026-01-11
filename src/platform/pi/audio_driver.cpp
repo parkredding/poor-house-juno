@@ -4,6 +4,12 @@
 #include <sched.h>
 #include <cstdint>
 
+// Enable denormal flushing to prevent CPU slowdown
+#if defined(__x86_64__) || defined(__i386__)
+    #include <xmmintrin.h>
+    #include <pmmintrin.h>
+#endif
+
 namespace phj {
 
 AudioDriver::AudioDriver()
@@ -250,6 +256,24 @@ void* AudioDriver::audioThreadFunc(void* arg) {
 }
 
 void AudioDriver::runAudioLoop() {
+    // Enable denormal flushing to prevent massive CPU slowdown
+    // Denormals (numbers very close to zero) can slow down audio processing by 100x
+#if defined(__x86_64__) || defined(__i386__)
+    // x86/x64: Enable FTZ (Flush-To-Zero) and DAZ (Denormals-Are-Zero)
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#elif defined(__aarch64__)
+    // ARM64: Enable flush-to-zero mode via FPCR register
+    uint64_t fpcr;
+    __asm__ __volatile__("mrs %0, fpcr" : "=r"(fpcr));
+    __asm__ __volatile__("msr fpcr, %0" :: "r"(fpcr | (1 << 24)));  // Set FZ bit
+#elif defined(__arm__)
+    // ARM32: Enable flush-to-zero mode via FPSCR register
+    uint32_t fpscr;
+    __asm__ __volatile__("vmrs %0, fpscr" : "=r"(fpscr));
+    __asm__ __volatile__("vmsr fpscr, %0" :: "r"(fpscr | (1 << 24)));  // Set FZ bit
+#endif
+
     float* leftBuffer = new float[bufferSize_];
     float* rightBuffer = new float[bufferSize_];
 
