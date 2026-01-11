@@ -2,6 +2,7 @@
 # Poor House Juno - One-Line Installer for Raspberry Pi
 # Usage: curl -sSL https://raw.githubusercontent.com/parkredding/poor-house-juno/main/install.sh | bash
 
+# Global fail-fast, but we will toggle this off for fragile sections
 set -e
 
 # Colors
@@ -36,6 +37,7 @@ get_input() {
         input_src="/dev/tty"
     fi
 
+    # Check if we are interactive
     if [ ! -t 0 ] && [ "$input_src" = "/dev/stdin" ]; then
         print_info "Non-interactive mode detected. Using default: $default"
         eval "$var_name='$default'"
@@ -49,7 +51,10 @@ get_input() {
         prompt_text="$prompt: "
     fi
 
+    # Print to stderr so it shows up even if stdout is redirected
     echo -n "$prompt_text" >&2
+    
+    # Read input
     read -r response < "$input_src"
     
     if [ -z "$response" ]; then
@@ -60,20 +65,28 @@ get_input() {
 }
 
 check_platform() {
+    # Don't exit on grep failure here
+    set +e
     if ! grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null && ! grep -q "BCM" /proc/cpuinfo 2>/dev/null; then
+        set -e
         print_error "This script is designed for Raspberry Pi"
         get_input "Continue anyway? (y/n)" "n" "CONTINUE_CHOICE"
         if [[ ! $CONTINUE_CHOICE =~ ^[Yy]$ ]]; then exit 1; fi
+    else
+        set -e
     fi
 }
 
 detect_audio_device() {
+    # Disable exit-on-error inside this logic-heavy function
+    set +e
     local best_device=""
     local best_score=0
 
-    # Dump aplay output to temp file to avoid pipe/subshell issues
-    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null || true
-
+    # Ensure temp file exists
+    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null
+    
+    # Use file descriptor to read safely
     while IFS= read -r line; do
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
             local card="${BASH_REMATCH[1]}"
@@ -86,11 +99,13 @@ detect_audio_device() {
             print_info "Testing ${hw_id} (${card_name})..." >&2
             local test_passed=false
 
-            # Redirect stdin to /dev/null for safety
+            # Test 48kHz
             if timeout 5 speaker-test -D "$hw_id" -c 2 -r 48000 -t sine -l 1 </dev/null >/dev/null 2>&1; then
                 test_passed=true
+            # Test 44.1kHz
             elif timeout 5 speaker-test -D "$hw_id" -c 2 -r 44100 -t sine -l 1 </dev/null >/dev/null 2>&1; then
                 test_passed=true
+            # BCM Fallback
             elif [[ $card_name =~ (bcm2835|Headphones|Analog) ]]; then
                 print_info "  ${hw_id} detection uncertain, assuming compatible" >&2
                 test_passed=true
@@ -115,6 +130,7 @@ detect_audio_device() {
     done < "$TEMP_AUDIO_LIST"
     
     echo "$best_device"
+    set -e
 }
 
 main() {
@@ -146,6 +162,9 @@ main() {
     print_step 3 6 "Building Poor House Juno"
     print_info "This may take 5-10 minutes..."
     
+    # Refresh sudo credentials before long build
+    sudo -v
+    
     mkdir -p build-pi
     cd build-pi
     cmake .. -DPLATFORM=pi -DCMAKE_BUILD_TYPE=Release < /dev/null
@@ -157,17 +176,22 @@ main() {
     fi
     print_success "Build completed"
 
+    # Refresh sudo again after long build
+    sudo -v
+
     # Step 4: Audio Selection
     print_step 4 6 "Audio Configuration"
     
-    # 1. Generate temp file safely
-    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null || true
+    # --- CRITICAL: Disable exit-on-error for detection phase ---
+    set +e
+    
+    aplay -l > "$TEMP_AUDIO_LIST" 2>/dev/null
     
     declare -a AUDIO_DEVICES
     declare -a AUDIO_NAMES
     count=0
 
-    # 2. Read from temp file (Safe, no process substitution)
+    # Safe read loop
     while IFS= read -r line; do
         if [[ $line =~ ^card\ ([0-9]+):\ ([^,]+).*device\ ([0-9]+): ]]; then
             AUDIO_DEVICES[$count]="hw:${BASH_REMATCH[1]},${BASH_REMATCH[3]}"
@@ -176,9 +200,11 @@ main() {
         fi
     done < "$TEMP_AUDIO_LIST"
 
-    # 3. Detect recommended
+    # Detect recommended (capturing output safe due to set +e)
     RECOMMENDED_AUDIO=$(detect_audio_device)
-    [ -z "$RECOMMENDED_AUDIO" ] && RECOMMENDED_AUDIO="default"
+    if [ -z "$RECOMMENDED_AUDIO" ]; then
+        RECOMMENDED_AUDIO="default"
+    fi
 
     echo -e "\nAvailable devices:"
     for i in "${!AUDIO_DEVICES[@]}"; do
@@ -188,8 +214,12 @@ main() {
     done
     echo "  $((count+1)). default (ALSA default)"
 
-    # 4. Clean up
+    # Clean up
     rm -f "$TEMP_AUDIO_LIST"
+
+    # Re-enable strict error checking
+    set -e
+    # -----------------------------------------------------------
 
     get_input "Select audio device (1-$((count+1)))" "" "AUDIO_CHOICE"
 
@@ -233,7 +263,10 @@ setup_autostart() {
     local audio_device="$1"
     
     echo -e "\nAvailable MIDI Devices:"
+    # Use +e here too just in case amidi fails
+    set +e
     amidi -l 2>/dev/null || echo "  (None found or permission denied)"
+    set -e
     
     get_input "Enter MIDI device (or press Enter for auto)" "hw:1,0,0" "MIDI_DEV"
     
