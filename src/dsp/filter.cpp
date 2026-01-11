@@ -133,15 +133,23 @@ void Filter::updateCoefficients() {
     // Clamp cutoff to valid range
     cutoffHz = clamp(cutoffHz, 20.0f, sampleRate_ * 0.49f);
 
+    // Safety: Validate cutoff frequency
+    if (!std::isfinite(cutoffHz)) {
+        cutoffHz = 1000.0f;  // Fallback to 1kHz
+    }
+
     // Calculate g coefficient (normalized cutoff)
     // g = tan(pi * fc / fs) for bilinear transform
     float wc = TWO_PI * cutoffHz / sampleRate_;
     g_ = std::tan(wc * 0.5f);
 
+    // Safety: Clamp g to prevent extreme values
+    g_ = clamp(g_, 0.0f, 10.0f);
+
     // Calculate resonance coefficient
     // k controls feedback amount (0.0 = no resonance, 4.0 = self-oscillation)
     // Map resonance parameter (0-1) to k (0-4)
-    k_ = params_.resonance * 4.0f;
+    k_ = clamp(params_.resonance, 0.0f, 1.0f) * 4.0f;
 
     // M11: Calculate HPF coefficient based on mode
     // Mode 0 = Off, 1 = 30Hz, 2 = 60Hz, 3 = 120Hz
